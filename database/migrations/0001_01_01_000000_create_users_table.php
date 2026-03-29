@@ -17,8 +17,15 @@ return new class extends Migration
             $table->string('email')->unique();
             $table->timestamp('email_verified_at')->nullable();
             $table->string('password');
+
+            // Fitur khusus CBT-APP
+            $table->string('profile_picture')->nullable(); // Foto profil user
+            $table->boolean('is_premium')->default(false); // Status awal: Gratis
+            $table->timestamp('premium_until')->nullable(); // Batas kedaluwarsa 1 tahun
+
             $table->rememberToken();
             $table->timestamps();
+            $table->softDeletes(); // Fitur agar data yang dihapus bisa dikembalikan
         });
 
         Schema::create('password_reset_tokens', function (Blueprint $table) {
