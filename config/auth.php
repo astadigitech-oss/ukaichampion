@@ -42,6 +42,17 @@ return [
             'driver' => 'session',
             'provider' => 'users',
         ],
+        // Tambahkan guard khusus admin di sini
+        'admin' => [
+            'driver' => 'session',
+            'provider' => 'admins',
+        ],
+
+        'api' => [
+            'driver' => 'token',
+            'provider' => 'users',
+            'hash' => false,
+        ],
     ],
 
     /*
@@ -67,6 +78,11 @@ return [
             'model' => env('AUTH_MODEL', User::class),
         ],
 
+        // Tambahkan provider admin yang mengarah ke Model Admin
+        'admins' => [
+            'driver' => 'eloquent',
+            'model' => App\Models\Admin::class, // Mengarah ke model Admin yang kita buat
+        ],
         // 'users' => [
         //     'driver' => 'database',
         //     'table' => 'users',
