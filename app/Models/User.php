@@ -2,31 +2,49 @@
 
 namespace App\Models;
 
-// use Illuminate\Contracts\Auth\MustVerifyEmail;
-use Database\Factories\UserFactory;
-use Illuminate\Database\Eloquent\Attributes\Fillable;
-use Illuminate\Database\Eloquent\Attributes\Hidden;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
+use Illuminate\Database\Eloquent\SoftDeletes; // Tambahkan ini
 
-#[Fillable(['name', 'email', 'password'])]
-#[Hidden(['password', 'remember_token'])]
 class User extends Authenticatable
 {
-    /** @use HasFactory<UserFactory> */
-    use HasFactory, Notifiable;
+    use HasFactory, Notifiable, SoftDeletes; // Tambahkan SoftDeletes di sini
 
-    /**
-     * Get the attributes that should be cast.
-     *
-     * @return array<string, string>
-     */
+    // 1. Kolom yang diizinkan untuk diisi (Mass Assignment)
+    protected $fillable = [
+        'name',
+        'email',
+        'password',
+        'profile_picture',
+        'is_premium',
+        'premium_until',
+    ];
+
+    protected $hidden = [
+        'password',
+        'remember_token',
+    ];
+
     protected function casts(): array
     {
         return [
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
+            'is_premium' => 'boolean',
+            'premium_until' => 'datetime', // Beritahu Laravel ini adalah format waktu
         ];
+    }
+
+    // 2. Relasi: Satu User memiliki banyak Transaksi
+    public function transactions()
+    {
+        return $this->hasMany(Transaction::class);
+    }
+
+    // 3. Relasi: Satu User memiliki banyak Riwayat Nilai
+    public function userResults()
+    {
+        return $this->hasMany(UserResult::class);
     }
 }

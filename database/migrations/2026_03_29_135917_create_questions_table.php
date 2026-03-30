@@ -17,9 +17,9 @@ return new class extends Migration
             $table->foreignId('exam_package_id')->constrained()->cascadeOnDelete();
 
             $table->text('question_text'); // Teks pertanyaan
-            $table->string('option_a');
-            $table->string('option_b');
-            $table->string('option_c');
+            $table->string('option_a')->nullable(); // Dibuat nullable jika soal hanya sampai A
+            $table->string('option_b')->nullable(); // Dibuat nullable jika soal hanya sampai A
+            $table->string('option_c')->nullable(); // Dibuat nullable jika soal hanya sampai B
             $table->string('option_d')->nullable(); // Dibuat nullable jika soal hanya sampai c
             $table->string('option_e')->nullable(); // Dibuat nullable jika soal hanya sampai D
 
