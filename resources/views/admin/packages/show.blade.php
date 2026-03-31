@@ -61,10 +61,22 @@
                                     <span
                                         class="bg-green-100 text-green-800 font-bold px-3 py-1 rounded-full text-xs">{{ $q->correct_answer }}</span>
                                 </td>
-                                <td class="px-6 py-4 text-right text-sm">
-                                    <a href="#"
-                                        class="text-yellow-600 hover:text-yellow-900 mr-3 font-semibold">Edit</a>
-                                    <a href="#" class="text-red-600 hover:text-red-900 font-semibold">Hapus</a>
+                                <td class="px-6 py-4 text-right text-sm flex justify-end gap-3 items-center">
+                                    <a href="{{ route('admin.questions.edit', $q->id) }}"
+                                        class="text-yellow-600 hover:text-yellow-900 font-bold transition-colors">
+                                        Edit
+                                    </a>
+
+                                    <form action="{{ route('admin.questions.destroy', $q->id) }}" method="POST"
+                                        class="m-0 p-0"
+                                        onsubmit="return confirm('Apakah Anda yakin ingin menghapus soal ini?');">
+                                        @csrf
+                                        @method('DELETE')
+                                        <button type="submit"
+                                            class="text-red-600 hover:text-red-900 font-bold transition-colors">
+                                            Hapus
+                                        </button>
+                                    </form>
                                 </td>
                             </tr>
                         @empty

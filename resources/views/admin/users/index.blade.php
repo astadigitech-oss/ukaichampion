@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Paket Ujian - CBT ADMIN</title>
+    <title>Manajemen User - CBT ADMIN</title>
     <script src="https://cdn.tailwindcss.com"></script>
     @livewireStyles
 </head>
@@ -17,14 +17,14 @@
 
     <div class="flex-1 p-8 h-screen flex flex-col">
         <div class="flex justify-between items-center mb-6">
-            <h1 class="text-3xl font-bold text-gray-800">Manajemen Paket Ujian</h1>
-            <a href="{{ route('admin.packages.create') }}"
+            <h1 class="text-3xl font-bold text-gray-800">Daftar Pengguna (Peserta)</h1>
+            <a href="{{ route('admin.users.create') }}"
                 class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-lg shadow transition-colors">
-                + Tambah Paket Baru
+                + Tambah User Baru
             </a>
         </div>
 
-        <livewire:admin.package-index />
+        <livewire:admin.user-index />
 
     </div>
 

@@ -102,14 +102,15 @@
             <hr class="mb-6">
 
             <div class="flex justify-end gap-4">
-                <button type="submit" name="action" value="save_and_add"
-                    class="bg-indigo-100 hover:bg-indigo-200 text-indigo-800 font-bold py-3 px-6 rounded-lg shadow-sm transition-colors border border-indigo-300">
-                    🔄 Simpan & Tambah Soal Lain
-                </button>
+
 
                 <button type="submit" name="action" value="save_and_close"
                     class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-8 rounded-lg shadow-lg transition-colors">
                     💾 Simpan & Kembali
+                </button>
+                <button type="submit" name="action" value="save_and_add"
+                    class="bg-indigo-100 hover:bg-indigo-200 text-indigo-800 font-bold py-3 px-6 rounded-lg shadow-sm transition-colors border border-indigo-300">
+                    🔄 Simpan & Tambah Soal Lain
                 </button>
             </div>
         </form>

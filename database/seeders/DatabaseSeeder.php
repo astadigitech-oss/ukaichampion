@@ -12,9 +12,9 @@ class DatabaseSeeder extends Seeder
     {
         // Menyuntikkan 1 akun Admin utama ke database
         Admin::create([
-            'name' => 'dmin',
+            'name' => 'admin',
             'email' => 'admin@gmail.com',
-            'password' => Hash::make('admin123'), // Ingat, passwordnya: admin123
+            'password' => Hash::make('admin'), // Ingat, passwordnya: admin123
         ]);
     }
 }

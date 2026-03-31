@@ -38,4 +38,6 @@ Route::middleware('auth:admin')->group(function () {
     Route::resource('/admin/categories', App\Http\Controllers\Admin\ExamCategoryController::class)->names('admin.categories');
     Route::resource('/admin/packages', App\Http\Controllers\Admin\ExamPackageController::class)->names('admin.packages');
     Route::resource('/admin/questions', App\Http\Controllers\Admin\QuestionController::class)->names('admin.questions');
+    // Manajemen User (Siswa/Peserta)
+    Route::resource('/admin/users', App\Http\Controllers\Admin\UserController::class)->names('admin.users');
 });

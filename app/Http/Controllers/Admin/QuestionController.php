@@ -87,4 +87,20 @@ class QuestionController extends Controller
         return redirect()->route('admin.packages.show', $question->exam_package_id)
             ->with('success', 'Perubahan soal berhasil disimpan!');
     }
+
+    public function destroy(string $id)
+    {
+        // Cari soalnya
+        $question = Question::findOrFail($id);
+
+        // Simpan ID paketnya dulu sebelum soalnya dihapus (untuk arah kembali)
+        $packageId = $question->exam_package_id;
+
+        // Hapus soal dari database
+        $question->delete();
+
+        // Kembalikan Admin ke Ruang Kelola Soal paket tersebut
+        return redirect()->route('admin.packages.show', $packageId)
+            ->with('success', 'Satu soal berhasil dihapus dari paket!');
+    }
 }

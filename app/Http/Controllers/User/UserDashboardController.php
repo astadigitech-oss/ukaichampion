@@ -3,17 +3,16 @@
 namespace App\Http\Controllers\User;
 
 use App\Http\Controllers\Controller;
-use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Auth;
+use App\Models\ExamPackage;
+// Baris Request dan Auth dihapus karena belum/tidak dipakai di sini
 
 class UserDashboardController extends Controller
 {
     public function index()
     {
-        // Ambil data user yang sedang login saat ini
-        $user = Auth::guard('web')->user();
+        // Ambil paket ujian dan hitung jumlah soalnya
+        $packages = ExamPackage::with('examCategory')->withCount('questions')->latest()->get();
 
-        // Arahkan ke file tampilan (Blade) dan bawa data user tersebut
-        return view('user.dashboard', compact('user'));
+        return view('user.dashboard', compact('packages'));
     }
 }
