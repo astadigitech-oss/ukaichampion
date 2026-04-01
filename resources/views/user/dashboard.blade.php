@@ -9,7 +9,12 @@
             <span>⚠️</span> {{ session('error') }}
         </div>
     @endif
-
+    @if (session('success'))
+        <div
+            class="bg-green-100 border-l-4 border-green-500 text-green-700 p-4 mb-6 rounded-lg shadow-sm font-bold flex items-center gap-2">
+            <span>✅</span> {{ session('success') }}
+        </div>
+    @endif
     <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-100 mb-6 border-l-4 border-l-blue-500">
         <h2 class="text-2xl font-bold text-gray-800">Selamat datang kembali, {{ auth()->user()->name }}!</h2>
         <p class="text-gray-500 mt-1">Mari persiapkan ujianmu dengan maksimal hari ini.</p>

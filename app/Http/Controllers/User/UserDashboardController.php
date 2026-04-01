@@ -33,4 +33,32 @@ class UserDashboardController extends Controller
 
         return view('user.dashboard', compact('packages', 'completedExamsCount'));
     }
+
+    public function exams()
+    {
+        return view('user.exams');
+    }
+
+    // Halaman Riwayat Nilai
+    public function history()
+    {
+        return view('user.history');
+    }
+
+    // Halaman Edit Profil
+    public function profile()
+    {
+        return view('user.profile');
+    }
+
+    // Halaman Review Jawaban (LOGIKA PINDAH KE SINI)
+    public function review(Request $request, $id)
+    {
+        // Pastikan user hanya bisa melihat hasil miliknya sendiri
+        $result = UserResult::with(['examPackage.examCategory', 'userAnswers.question'])
+            ->where('user_id', $request->user()->id)
+            ->findOrFail($id);
+
+        return view('user.review', compact('result'));
+    }
 }

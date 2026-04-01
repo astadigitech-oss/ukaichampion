@@ -53,28 +53,11 @@ Route::middleware('auth:web')->group(function () {
     // Rute Halaman Pengerjaan Ujian
     Route::get('/exam/play/{result_id}', [\App\Http\Controllers\User\ExamController::class, 'play'])->name('exam.play');
 
-    Route::get('/user/history', function () {
-        return view('user.history');
-    })->name('user.history');
-
-    Route::get('/user/history/{id}/review', function (Request $request, $id) {
-
-        // Keamanan: Cek apakah user benar-benar login, jika tidak, lempar ke halaman login
-        if (!$request->user()) {
-            return redirect()->route('login');
-        }
-
-        // Ambil data nilai, relasi paket, dan jawaban siswa (lengkap dengan soalnya)
-        $result = \App\Models\UserResult::with(['examPackage.examCategory', 'userAnswers.question'])
-            ->where('user_id', $request->user()->id) // Gunakan $request->user()->id
-            ->findOrFail($id);
-
-        return view('user.review', compact('result'));
-    })->middleware('auth')->name('user.review');
-
-    Route::get('/user/exams', function () {
-        return view('user.exams');
-    })->name('user.exams');
+    Route::get('/user/dashboard', [UserDashboardController::class, 'index'])->name('user.dashboard');
+    Route::get('/user/exams', [UserDashboardController::class, 'exams'])->name('user.exams');
+    Route::get('/user/history', [UserDashboardController::class, 'history'])->name('user.history');
+    Route::get('/user/history/{id}/review', [UserDashboardController::class, 'review'])->name('user.review');
+    Route::get('/profile', [UserDashboardController::class, 'profile'])->name('user.profile');
 });
 
 // 4. Rute Khusus ADMIN (Dilindungi oleh Satpam 'auth:admin')
@@ -86,4 +69,6 @@ Route::middleware('auth:admin')->group(function () {
     Route::resource('/admin/questions', App\Http\Controllers\Admin\QuestionController::class)->names('admin.questions');
     // Manajemen User (Siswa/Peserta)
     Route::resource('/admin/users', App\Http\Controllers\Admin\UserController::class)->names('admin.users');
+
+    Route::get('/admin/profile', [AdminDashboardController::class, 'profile'])->name('admin.profile');
 });

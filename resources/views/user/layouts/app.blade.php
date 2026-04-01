@@ -6,6 +6,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>@yield('title', 'CBT Peserta')</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <script defer src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js"></script>
 </head>
 
 <body class="bg-gray-50 flex min-h-screen">
@@ -30,6 +31,8 @@
                 📊 Riwayat Nilai
             </a>
 
+
+
             <a href="#"
                 class="block py-3 px-4 rounded transition duration-200 mb-2 font-medium hover:bg-blue-700 text-blue-100">
                 💳 Upgrade Premium
@@ -50,11 +53,38 @@
 
         <div class="bg-white shadow-sm p-4 flex justify-between items-center border-b border-gray-200 z-10">
             <h2 class="text-xl font-bold text-gray-800">Ruang Belajar</h2>
-            <div class="flex items-center gap-3">
-                <span class="text-gray-600 font-medium">{{ auth()->user()->name }}</span>
-                <div
-                    class="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center text-blue-700 font-bold text-lg uppercase">
-                    {{ substr(auth()->user()->name, 0, 1) }}
+
+            <div x-data="{ open: false }" class="relative">
+                <button @click="open = !open"
+                    class="flex items-center gap-3 hover:bg-gray-50 p-1 rounded-lg transition">
+                    <span class="text-gray-600 font-medium hidden md:block">{{ auth()->user()->name }}</span>
+
+                    @if (auth()->user()->profile_picture)
+                        <img src="{{ asset('storage/' . auth()->user()->profile_picture) }}"
+                            class="w-10 h-10 rounded-full object-cover border-2 border-blue-100">
+                    @else
+                        <div
+                            class="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center text-blue-700 font-bold text-lg uppercase border-2 border-blue-200">
+                            {{ substr(auth()->user()->name, 0, 1) }}
+                        </div>
+                    @endif
+                    <span class="text-gray-400 text-xs">▼</span>
+                </button>
+
+                <div x-show="open" @click.away="open = false"
+                    class="absolute right-0 mt-2 w-48 bg-white rounded-xl shadow-xl border border-gray-100 py-2 z-50">
+                    <a href="{{ route('user.profile') }}"
+                        class="block px-4 py-2 text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-700 font-medium">
+                        ⚙️ Pengaturan Profil
+                    </a>
+                    <hr class="my-1">
+                    <form action="{{ route('logout') }}" method="POST">
+                        @csrf
+                        <button type="submit"
+                            class="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50 font-medium">
+                            🚪 Keluar Aplikasi
+                        </button>
+                    </form>
                 </div>
             </div>
         </div>

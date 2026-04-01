@@ -14,6 +14,14 @@ class AdminDashboardController extends Controller
         $admin = Auth::guard('admin')->user();
 
         // Arahkan ke file tampilan (Blade) dan bawa data admin tersebut
-        return view('admin.dashboard', compact('admin'));
+        return view('admin.dashboard', [
+            'totalUsers' => \App\Models\User::count(),
+            'totalPackages' => \App\Models\ExamPackage::count(),
+            'revenue' => 0, // Ganti dengan logika pendapatanmu nanti
+        ]);
+    }
+    public function profile()
+    {
+        return view('admin.profile');
     }
 }
