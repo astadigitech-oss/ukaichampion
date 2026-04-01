@@ -18,4 +18,17 @@ class ExamCategory extends Model
     {
         return $this->hasMany(ExamPackage::class);
     }
+
+    protected static function booted()
+    {
+        // Ketika kategori dihapus (soft delete), hapus juga semua paketnya
+        static::deleted(function ($category) {
+            $category->examPackages()->delete();
+        });
+
+        // (Opsional) Jika kategori dipulihkan, pulihkan juga paketnya
+        static::restored(function ($category) {
+            $category->examPackages()->withTrashed()->restore();
+        });
+    }
 }

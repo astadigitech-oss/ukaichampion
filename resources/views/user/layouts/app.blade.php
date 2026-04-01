@@ -20,8 +20,8 @@
                 🏠 Dashboard Utama
             </a>
 
-            <a href="#"
-                class="block py-3 px-4 rounded transition duration-200 mb-2 font-medium hover:bg-blue-700 text-blue-100">
+            <a href="{{ route('user.exams') }}"
+                class="block py-3 px-4 rounded transition duration-200 mb-2 font-medium {{ request()->routeIs('user.exams') ? 'bg-blue-900 font-bold text-white' : 'hover:bg-blue-700 text-blue-100' }}">
                 📝 Daftar Ujian
             </a>
 

@@ -4,6 +4,24 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Auth\AuthController;
 use App\Http\Controllers\User\UserDashboardController;
 use App\Http\Controllers\Admin\AdminDashboardController;
+use Illuminate\Http\Request; // Pastikan ini ada di bagian paling atas file web.php
+
+// ... rute lainnya ...
+
+Route::get('/user/history/{id}/review', function (Request $request, $id) {
+
+    // Keamanan: Cek apakah user benar-benar login, jika tidak, lempar ke halaman login
+    if (!$request->user()) {
+        return redirect()->route('login');
+    }
+
+    // Ambil data nilai, relasi paket, dan jawaban siswa (lengkap dengan soalnya)
+    $result = \App\Models\UserResult::with(['examPackage.examCategory', 'userAnswers.question'])
+        ->where('user_id', $request->user()->id) // Gunakan $request->user()->id
+        ->findOrFail($id);
+
+    return view('user.review', compact('result'));
+})->middleware('auth')->name('user.review'); // Tambahkan ->middleware('auth') di sini
 
 // 1. Halaman Utama (Sementara kita arahkan ke halaman bawaan Laravel)
 Route::get('/', function () {
@@ -38,6 +56,25 @@ Route::middleware('auth:web')->group(function () {
     Route::get('/user/history', function () {
         return view('user.history');
     })->name('user.history');
+
+    Route::get('/user/history/{id}/review', function (Request $request, $id) {
+
+        // Keamanan: Cek apakah user benar-benar login, jika tidak, lempar ke halaman login
+        if (!$request->user()) {
+            return redirect()->route('login');
+        }
+
+        // Ambil data nilai, relasi paket, dan jawaban siswa (lengkap dengan soalnya)
+        $result = \App\Models\UserResult::with(['examPackage.examCategory', 'userAnswers.question'])
+            ->where('user_id', $request->user()->id) // Gunakan $request->user()->id
+            ->findOrFail($id);
+
+        return view('user.review', compact('result'));
+    })->middleware('auth')->name('user.review');
+
+    Route::get('/user/exams', function () {
+        return view('user.exams');
+    })->name('user.exams');
 });
 
 // 4. Rute Khusus ADMIN (Dilindungi oleh Satpam 'auth:admin')

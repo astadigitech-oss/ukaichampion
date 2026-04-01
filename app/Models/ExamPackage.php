@@ -19,6 +19,7 @@ class ExamPackage extends Model
     public function examCategory()
     {
         return $this->belongsTo(ExamCategory::class);
+        return $this->belongsTo(ExamCategory::class)->withTrashed();
     }
 
     // Relasi ke Bawah: Memiliki banyak Pertanyaan
@@ -31,5 +32,18 @@ class ExamPackage extends Model
     public function userResults()
     {
         return $this->hasMany(UserResult::class);
+    }
+
+    protected static function booted()
+    {
+        // Otomatis soft delete semua soal jika paketnya dihapus
+        static::deleted(function ($package) {
+            $package->questions()->delete();
+        });
+
+        // Otomatis pulihkan semua soal jika paketnya dipulihkan
+        static::restored(function ($package) {
+            $package->questions()->withTrashed()->restore();
+        });
     }
 }

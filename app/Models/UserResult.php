@@ -33,6 +33,7 @@ class UserResult extends Model
     public function examPackage()
     {
         return $this->belongsTo(ExamPackage::class);
+        return $this->belongsTo(ExamPackage::class)->withTrashed();
     }
 
     // Relasi ke Bawah: Memiliki banyak detail jawaban. 

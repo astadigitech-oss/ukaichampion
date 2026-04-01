@@ -29,6 +29,8 @@ class UserAnswer extends Model
     // Relasi ke Atas: Menjawab 1 Pertanyaan
     public function question()
     {
-        return $this->belongsTo(Question::class);
+        // Tetap baca teks soal dan kunci jawaban dari "tong sampah"
+        // agar halaman Review milik siswa tidak error
+        return $this->belongsTo(Question::class)->withTrashed();
     }
 }

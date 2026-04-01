@@ -75,11 +75,11 @@ new class extends Component {
         $finalScore = $totalQuestions > 0 ? ($correctAnswersCount / $totalQuestions) * 100 : 0;
         $result->update(['score' => $finalScore, 'finished_at' => now()]);
 
+        // PERBAIKAN DI SINI: Ubah user.dashboard menjadi user.exams
         return redirect()
-            ->route('user.dashboard')
+            ->route('user.exams')
             ->with('success', 'Ujian Selesai! Skor Anda: ' . number_format($finalScore, 1));
     }
-
     // Tambahkan pemanggilan updateSessionIndex di setiap navigasi
     public function nextQuestion()
     {
@@ -126,27 +126,26 @@ new class extends Component {
                     </div>
                 </div>
 
-                <div class="p-6 md:p-8" wire:key="q-{{ $currentQ->id }}">
-                    <div class="prose max-w-none mb-8 text-gray-800 text-lg">{!! $currentQ->question_text !!}</div>
-                    <div class="space-y-4">
-                        @foreach (['A', 'B', 'C', 'D', 'E'] as $opt)
-                            @php $optionField = 'option_' . strtolower($opt); @endphp
-                            @if ($currentQ->$optionField)
-                                <label wire:key="opt-{{ $currentQ->id }}-{{ $opt }}"
-                                    class="flex items-start gap-4 p-4 border-2 rounded-xl cursor-pointer transition-all {{ isset($answers[$currentQ->id]) && $answers[$currentQ->id] == $opt ? 'bg-blue-50 border-blue-500' : 'hover:bg-gray-50 border-gray-100' }}">
-                                    <div class="pt-1">
-                                        <input type="radio"
-                                            wire:click="answerQuestion({{ $currentQ->id }}, '{{ $opt }}')"
-                                            {{ isset($answers[$currentQ->id]) && $answers[$currentQ->id] == $opt ? 'checked' : '' }}
-                                            class="w-5 h-5 text-blue-600">
-                                    </div>
-                                    <div class="flex gap-3"><span
-                                            class="font-bold text-gray-700">{{ $opt }}.</span>
-                                        {!! $currentQ->$optionField !!}</div>
-                                </label>
-                            @endif
-                        @endforeach
-                    </div>
+                <div class="space-y-4">
+                    @foreach (['A', 'B', 'C', 'D', 'E'] as $opt)
+                        @php $optionField = 'option_' . strtolower($opt); @endphp
+                        @if ($currentQ->$optionField)
+                            <label wire:key="opt-{{ $currentQ->id }}-{{ $opt }}"
+                                class="flex items-start gap-4 p-4 border-2 rounded-xl cursor-pointer transition-all {{ isset($answers[$currentQ->id]) && $answers[$currentQ->id] == $opt ? 'bg-blue-50 border-blue-500' : 'hover:bg-gray-50 border-gray-100' }}">
+                                <div class="pt-1">
+
+                                    <input type="radio" name="jawaban_{{ $currentQ->id }}"
+                                        wire:click="answerQuestion({{ $currentQ->id }}, '{{ $opt }}')"
+                                        {{ isset($answers[$currentQ->id]) && $answers[$currentQ->id] == $opt ? 'checked' : '' }}
+                                        class="w-5 h-5 text-blue-600">
+
+                                </div>
+                                <div class="flex gap-3"><span
+                                        class="font-bold text-gray-700">{{ $opt }}.</span>
+                                    {!! $currentQ->$optionField !!}</div>
+                            </label>
+                        @endif
+                    @endforeach
                 </div>
 
                 <div class="bg-gray-50 p-4 border-t flex justify-between">
