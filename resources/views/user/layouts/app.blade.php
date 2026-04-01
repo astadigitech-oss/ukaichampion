@@ -16,18 +16,24 @@
         </div>
         <div class="grow p-4">
             <a href="{{ route('user.dashboard') }}"
-                class="block py-3 px-4 rounded transition duration-200 mb-2 font-medium {{ request()->routeIs('user.dashboard') ? 'bg-blue-900 font-bold' : 'hover:bg-blue-700' }}">
+                class="block py-3 px-4 rounded transition duration-200 mb-2 font-medium {{ request()->routeIs('user.dashboard') ? 'bg-blue-900 font-bold text-white' : 'hover:bg-blue-700 text-blue-100' }}">
                 🏠 Dashboard Utama
             </a>
+
             <a href="#"
-                class="block py-3 px-4 rounded transition duration-200 hover:bg-blue-700 mb-2 font-medium">📝 Daftar
-                Ujian</a>
+                class="block py-3 px-4 rounded transition duration-200 mb-2 font-medium hover:bg-blue-700 text-blue-100">
+                📝 Daftar Ujian
+            </a>
+
+            <a href="{{ route('user.history') }}"
+                class="block py-3 px-4 rounded transition duration-200 mb-2 font-medium {{ request()->routeIs('user.history') ? 'bg-blue-900 font-bold text-white' : 'hover:bg-blue-700 text-blue-100' }}">
+                📊 Riwayat Nilai
+            </a>
+
             <a href="#"
-                class="block py-3 px-4 rounded transition duration-200 hover:bg-blue-700 mb-2 font-medium">📊 Riwayat
-                Nilai</a>
-            <a href="#"
-                class="block py-3 px-4 rounded transition duration-200 hover:bg-blue-700 mb-2 font-medium">💳 Upgrade
-                Premium</a>
+                class="block py-3 px-4 rounded transition duration-200 mb-2 font-medium hover:bg-blue-700 text-blue-100">
+                💳 Upgrade Premium
+            </a>
         </div>
         <div class="p-4 border-t border-blue-700">
             <form action="{{ route('logout') }}" method="POST">

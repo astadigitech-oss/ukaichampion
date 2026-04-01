@@ -34,6 +34,10 @@ Route::middleware('auth:web')->group(function () {
 
     // Rute Halaman Pengerjaan Ujian
     Route::get('/exam/play/{result_id}', [\App\Http\Controllers\User\ExamController::class, 'play'])->name('exam.play');
+
+    Route::get('/user/history', function () {
+        return view('user.history');
+    })->name('user.history');
 });
 
 // 4. Rute Khusus ADMIN (Dilindungi oleh Satpam 'auth:admin')
