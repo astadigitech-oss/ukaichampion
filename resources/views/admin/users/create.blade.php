@@ -29,42 +29,55 @@
                 <div class="mb-4">
                     <label class="block text-gray-700 text-sm font-bold mb-2">Nama Lengkap <span
                             class="text-red-500">*</span></label>
-                    <input type="text" name="name"
-                        class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-200 outline-none"
+                    <input type="text" name="name" value="{{ old('name') }}"
+                        class="w-full px-4 py-2 border @error('name') border-red-500 bg-red-50 @else border-gray-300 @enderror rounded-lg focus:ring-2 focus:ring-blue-200 outline-none"
                         required placeholder="Contoh: Budi Santoso">
+                    @error('name')
+                        <p class="text-red-500 text-xs italic mt-1">{{ $message }}</p>
+                    @enderror
                 </div>
 
                 <div class="mb-4">
                     <label class="block text-gray-700 text-sm font-bold mb-2">Alamat Email <span
                             class="text-red-500">*</span></label>
-                    <input type="email" name="email"
-                        class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-200 outline-none"
+                    <input type="email" name="email" value="{{ old('email') }}"
+                        class="w-full px-4 py-2 border @error('email') border-red-500 bg-red-50 @else border-gray-300 @enderror rounded-lg focus:ring-2 focus:ring-blue-200 outline-none"
                         required placeholder="budi@email.com">
+                    @error('email')
+                        <p class="text-red-500 text-xs italic mt-1">{{ $message }}</p>
+                    @enderror
                 </div>
 
                 <div class="mb-4">
                     <label class="block text-gray-700 text-sm font-bold mb-2">Password <span
                             class="text-red-500">*</span></label>
                     <input type="password" name="password"
-                        class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-200 outline-none"
-                        required placeholder="Minimal 6 karakter">
+                        class="w-full px-4 py-2 border @error('password') border-red-500 bg-red-50 @else border-gray-300 @enderror rounded-lg focus:ring-2 focus:ring-blue-200 outline-none"
+                        required placeholder="Minimal 3 karakter">
+                    @error('password')
+                        <p class="text-red-500 text-xs italic mt-1">{{ $message }}</p>
+                    @enderror
                 </div>
 
                 <div class="mb-4">
                     <label class="block text-gray-700 text-sm font-bold mb-2">Aktivasi Membership</label>
                     <div class="flex items-center gap-4 bg-yellow-50 p-3 rounded-lg border border-yellow-200">
                         <input type="checkbox" name="is_premium" id="is_premium" value="1"
+                            {{ old('is_premium') ? 'checked' : '' }}
                             class="w-5 h-5 text-yellow-600 focus:ring-yellow-500" onchange="togglePremiumDate()">
                         <label for="is_premium" class="text-sm font-bold text-yellow-800 cursor-pointer">Jadikan User
                             Premium 👑</label>
                     </div>
                 </div>
 
-                <div id="premium_date_container" class="mb-4 hidden">
+                <div id="premium_date_container" class="mb-4 {{ old('is_premium') ? '' : 'hidden' }}">
                     <label class="block text-gray-700 text-sm font-bold mb-2">Berlaku Hingga</label>
                     <input type="date" name="premium_until"
-                        class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-yellow-200 outline-none"
-                        value="{{ date('Y-m-d', strtotime('+1 year')) }}">
+                        class="w-full px-4 py-2 border @error('premium_until') border-red-500 bg-red-50 @else border-gray-300 @enderror rounded-lg focus:ring-2 focus:ring-yellow-200 outline-none"
+                        value="{{ old('premium_until', date('Y-m-d', strtotime('+1 year'))) }}">
+                    @error('premium_until')
+                        <p class="text-red-500 text-xs italic mt-1">{{ $message }}</p>
+                    @enderror
                     <p class="text-xs text-gray-500 mt-1 italic">*Default: 1 tahun dari sekarang.</p>
                 </div>
             </div>

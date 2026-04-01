@@ -6,11 +6,45 @@ use App\Models\User;
 
 new class extends Component {
     use WithPagination;
+
     public $search = '';
+
+    // FITUR BULK DELETE: Variabel penampung
+    public $selected = [];
+    public $selectAll = false;
 
     public function updatingSearch()
     {
         $this->resetPage();
+        // Reset centang jika Admin mengetik pencarian baru
+        $this->selected = [];
+        $this->selectAll = false;
+    }
+
+    // FITUR BULK DELETE: Fungsi ketika Checkbox "Pilih Semua" di header diklik
+    public function updatedSelectAll($value)
+    {
+        if ($value) {
+            // Ambil semua ID yang sesuai dengan pencarian saat ini
+            $this->selected = User::where('name', 'like', '%' . $this->search . '%')
+                ->orWhere('email', 'like', '%' . $this->search . '%')
+                ->pluck('id')
+                ->map(fn($id) => (string) $id)
+                ->toArray();
+        } else {
+            $this->selected = [];
+        }
+    }
+
+    // FITUR BULK DELETE: Eksekusi penghapusan massal
+    public function deleteSelected()
+    {
+        if (count($this->selected) > 0) {
+            User::whereIn('id', $this->selected)->delete();
+            $this->selected = [];
+            $this->selectAll = false;
+            session()->flash('success', 'Semua data yang dicentang berhasil dihapus.');
+        }
     }
 
     public function delete($id)
@@ -19,10 +53,21 @@ new class extends Component {
         session()->flash('success', 'Akun user berhasil dihapus.');
     }
 
+    public function togglePremium($id)
+    {
+        $user = User::findOrFail($id);
+        if ($user->is_premium) {
+            $user->update(['is_premium' => false, 'premium_until' => null]);
+            session()->flash('success', 'Status Premium berhasil dicabut dari akun ' . $user->name);
+        } else {
+            $user->update(['is_premium' => true, 'premium_until' => now()->addYear()]);
+            session()->flash('success', 'Akun ' . $user->name . ' berhasil di-upgrade ke Premium! 👑');
+        }
+    }
+
     public function with(): array
     {
         return [
-            // Mencari berdasarkan nama ATAU email
             'users' => User::where('name', 'like', '%' . $this->search . '%')
                 ->orWhere('email', 'like', '%' . $this->search . '%')
                 ->latest()
@@ -32,17 +77,28 @@ new class extends Component {
 }; ?>
 
 <div class="bg-white rounded-xl shadow-sm border overflow-hidden">
-    <div class="p-6 border-b flex justify-between items-center bg-gray-50">
-        <div class="relative w-full max-w-md">
-            <span class="absolute left-3 top-2.5 text-gray-400">🔍</span>
-            <input wire:model.live.debounce.300ms="search" type="text" placeholder="Cari nama atau email user..."
-                class="w-full px-4 py-2 pl-10 border rounded-lg focus:ring-2 focus:ring-blue-200 outline-none">
+    <div class="p-6 border-b flex justify-between items-center bg-gray-50 flex-wrap gap-4">
+        <div class="flex items-center gap-4 w-full md:w-auto">
+            <div class="relative w-full md:w-96">
+                <span class="absolute left-3 top-2.5 text-gray-400">🔍</span>
+                <input wire:model.live.debounce.300ms="search" type="text" placeholder="Cari nama atau email user..."
+                    class="w-full px-4 py-2 pl-10 border rounded-lg focus:ring-2 focus:ring-blue-200 outline-none">
+            </div>
+            <div wire:loading class="text-blue-500 text-sm font-semibold animate-pulse whitespace-nowrap">⏳ Mencari...
+            </div>
         </div>
-        <div wire:loading class="text-blue-500 text-sm font-semibold animate-pulse">⏳ Mencari data...</div>
+
+        @if (count($selected) > 0)
+            <button wire:click="deleteSelected"
+                wire:confirm="PERINGATAN! Anda yakin ingin menghapus {{ count($selected) }} user terpilih beserta riwayat ujian mereka secara permanen?"
+                class="bg-red-600 hover:bg-red-700 text-white font-bold py-2 px-6 rounded-lg shadow-lg transition-colors animate-pulse">
+                🗑️ Hapus Terpilih ({{ count($selected) }})
+            </button>
+        @endif
     </div>
 
     @if (session('success'))
-        <div class="bg-green-100 border-l-4 border-green-500 text-green-700 p-4 m-4 rounded">
+        <div class="bg-green-100 border-l-4 border-green-500 text-green-700 p-4 m-4 rounded font-medium">
             {{ session('success') }}
         </div>
     @endif
@@ -51,6 +107,10 @@ new class extends Component {
         <table class="min-w-full divide-y divide-gray-200">
             <thead class="bg-white">
                 <tr>
+                    <th class="px-6 py-4 w-10">
+                        <input type="checkbox" wire:model.live="selectAll"
+                            class="w-5 h-5 text-blue-600 border-gray-300 rounded cursor-pointer focus:ring-blue-500">
+                    </th>
                     <th class="px-6 py-4 text-left font-bold text-gray-500 uppercase text-xs w-16">No</th>
                     <th class="px-6 py-4 text-left font-bold text-gray-500 uppercase text-xs">Informasi User</th>
                     <th class="px-6 py-4 text-center font-bold text-gray-500 uppercase text-xs">Status Akun</th>
@@ -59,7 +119,14 @@ new class extends Component {
             </thead>
             <tbody class="divide-y divide-gray-200 bg-white">
                 @forelse($users as $index => $user)
-                    <tr class="hover:bg-gray-50">
+                    <tr
+                        class="transition-colors {{ in_array($user->id, $selected) ? 'bg-blue-50' : 'hover:bg-gray-50' }}">
+
+                        <td class="px-6 py-4">
+                            <input type="checkbox" wire:model.live="selected" value="{{ $user->id }}"
+                                class="w-5 h-5 text-blue-600 border-gray-300 rounded cursor-pointer focus:ring-blue-500">
+                        </td>
+
                         <td class="px-6 py-4 text-sm text-gray-500">{{ $users->firstItem() + $index }}</td>
                         <td class="px-6 py-4">
                             <div class="flex items-center">
@@ -79,24 +146,31 @@ new class extends Component {
                                 <span
                                     class="bg-yellow-100 text-yellow-800 px-3 py-1 rounded-full text-xs font-bold border border-yellow-200 shadow-sm">👑
                                     PREMIUM</span>
-                                <div class="text-xs text-gray-500 mt-1">s/d
-                                    {{ \Carbon\Carbon::parse($user->premium_until)->format('d M Y') }}</div>
                             @else
                                 <span
                                     class="bg-gray-100 text-gray-600 px-3 py-1 rounded-full text-xs font-bold border border-gray-200">REGULER</span>
                             @endif
                         </td>
                         <td class="px-6 py-4 text-right text-sm">
+                            @if ($user->is_premium)
+                                <button wire:click="togglePremium({{ $user->id }})"
+                                    class="bg-gray-200 text-gray-700 hover:bg-gray-300 font-bold px-3 py-1 rounded transition-colors mr-2">⬇️
+                                    Cabut Premium</button>
+                            @else
+                                <button wire:click="togglePremium({{ $user->id }})"
+                                    class="bg-green-100 text-green-700 hover:bg-green-200 font-bold px-3 py-1 rounded transition-colors mr-2">👑
+                                    Upgrade</button>
+                            @endif
                             <a href="{{ route('admin.users.edit', $user->id) }}"
-                                class="bg-yellow-100 text-yellow-700 hover:bg-yellow-200 px-3 py-1 rounded transition-colors mr-2">Edit</a>
+                                class="bg-yellow-100 text-yellow-700 hover:bg-yellow-200 font-bold px-3 py-1 rounded transition-colors mr-2">Edit</a>
                             <button wire:click="delete({{ $user->id }})"
                                 wire:confirm="Hapus user ini beserta data ujiannya?"
-                                class="bg-red-100 text-red-700 hover:bg-red-200 px-3 py-1 rounded transition-colors">Hapus</button>
+                                class="bg-red-100 text-red-700 hover:bg-red-200 font-bold px-3 py-1 rounded transition-colors">Hapus</button>
                         </td>
                     </tr>
                 @empty
                     <tr>
-                        <td colspan="4" class="px-6 py-10 text-center text-gray-500 text-lg">📭 Belum ada data user
+                        <td colspan="5" class="px-6 py-10 text-center text-gray-500 text-lg">📭 Belum ada data user
                             yang terdaftar.</td>
                     </tr>
                 @endforelse

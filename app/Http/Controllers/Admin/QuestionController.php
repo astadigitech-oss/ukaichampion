@@ -12,7 +12,7 @@ class QuestionController extends Controller
     // Method index biarkan kosong atau arahkan ke Livewire/Volt yang sudah kita buat
     public function index()
     {
-        return view('admin.questions.index');
+        return redirect()->route('admin.packages.index');
     }
 
     public function create(Request $request)
@@ -28,28 +28,26 @@ class QuestionController extends Controller
     {
         $validated = $request->validate([
             'exam_package_id' => 'required|exists:exam_packages,id',
-            'question_text' => 'required|string',
-            'option_a' => 'nullable|string',
-            'option_b' => 'nullable|string',
-            'option_c' => 'nullable|string',
-            'option_d' => 'nullable|string',
-            'option_e' => 'nullable|string',
-            'correct_answer' => 'required|in:A,B,C,D,E',
-            'explanation' => 'nullable|string',
+            'question_text'   => 'required', // Hapus 'string' agar Quill Editor lancar
+            'option_a'        => 'required', // Minimal A wajib isi
+            'option_b'        => 'required', // Minimal B wajib isi
+            'option_c'        => 'nullable',
+            'option_d'        => 'nullable',
+            'option_e'        => 'nullable',
+            'correct_answer'  => 'required|in:A,B,C,D,E',
+            'explanation'     => 'nullable',
         ]);
 
-        Question::create($validated);
+        \App\Models\Question::create($validated);
 
-        // Cek tombol mana yang ditekan oleh Admin
+        // Gunakan variabel $validated agar lebih konsisten
         if ($request->input('action') === 'save_and_add') {
-            // Jika "Simpan & Tambah Lagi", kembalikan ke form kosong dengan paket yang sama
             return redirect()->route('admin.questions.create', ['package_id' => $validated['exam_package_id']])
                 ->with('success', 'Soal sebelumnya berhasil disimpan! Silakan ketik soal berikutnya.');
         }
 
-        // Jika "Simpan & Kembali", arahkan kembali ke Ruang Kelola Soal Paket tersebut
         return redirect()->route('admin.packages.show', $validated['exam_package_id'])
-            ->with('success', 'Soal berhasil ditambahkan ke dalam paket!');
+            ->with('success', 'Soal berhasil ditambahkan!');
     }
 
     public function edit(string $id)

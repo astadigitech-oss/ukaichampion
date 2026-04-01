@@ -6,11 +6,45 @@ use App\Models\ExamPackage;
 
 new class extends Component {
     use WithPagination;
+
     public $search = '';
+
+    // VARIABEL BULK DELETE
+    public $selected = [];
+    public $selectAll = false;
 
     public function updatingSearch()
     {
         $this->resetPage();
+        $this->selected = [];
+        $this->selectAll = false;
+    }
+
+    // FUNGSI SELECT ALL
+    public function updatedSelectAll($value)
+    {
+        if ($value) {
+            $this->selected = ExamPackage::where('title', 'like', '%' . $this->search . '%')
+                ->orWhereHas('examCategory', function ($q) {
+                    $q->where('name', 'like', '%' . $this->search . '%');
+                })
+                ->pluck('id')
+                ->map(fn($id) => (string) $id)
+                ->toArray();
+        } else {
+            $this->selected = [];
+        }
+    }
+
+    // FUNGSI HAPUS MASSAL
+    public function deleteSelected()
+    {
+        if (count($this->selected) > 0) {
+            ExamPackage::whereIn('id', $this->selected)->delete();
+            $this->selected = [];
+            $this->selectAll = false;
+            session()->flash('success', 'Paket ujian terpilih berhasil dihapus.');
+        }
     }
 
     public function delete($id)
@@ -34,13 +68,24 @@ new class extends Component {
 }; ?>
 
 <div class="bg-white rounded-xl shadow-sm border overflow-hidden">
-    <div class="p-6 border-b flex justify-between items-center bg-gray-50">
-        <div class="relative w-full max-w-md">
-            <span class="absolute left-3 top-2.5 text-gray-400">🔍</span>
-            <input wire:model.live.debounce.300ms="search" type="text" placeholder="Cari nama paket atau kategori..."
-                class="w-full px-4 py-2 pl-10 border rounded-lg focus:ring-2 focus:ring-blue-200 outline-none">
+    <div class="p-6 border-b flex justify-between items-center bg-gray-50 flex-wrap gap-4">
+        <div class="flex items-center gap-4 w-full md:w-auto">
+            <div class="relative w-full max-w-md md:w-80">
+                <span class="absolute left-3 top-2.5 text-gray-400">🔍</span>
+                <input wire:model.live.debounce.300ms="search" type="text"
+                    placeholder="Cari nama paket atau kategori..."
+                    class="w-full px-4 py-2 pl-10 border rounded-lg focus:ring-2 focus:ring-blue-200 outline-none">
+            </div>
+            <div wire:loading class="text-blue-500 text-sm font-semibold animate-pulse">⏳ Mencari...</div>
         </div>
-        <div wire:loading class="text-blue-500 text-sm font-semibold animate-pulse">⏳ Mencari...</div>
+
+        @if (count($selected) > 0)
+            <button wire:click="deleteSelected"
+                wire:confirm="PERINGATAN! Anda yakin ingin menghapus {{ count($selected) }} paket ujian beserta semua soal di dalamnya?"
+                class="bg-red-600 hover:bg-red-700 text-white font-bold py-2 px-6 rounded-lg shadow-lg transition-colors animate-pulse">
+                🗑️ Hapus Terpilih ({{ count($selected) }})
+            </button>
+        @endif
     </div>
 
     @if (session('success'))
@@ -53,6 +98,10 @@ new class extends Component {
         <table class="min-w-full divide-y divide-gray-200">
             <thead class="bg-white">
                 <tr>
+                    <th class="px-6 py-4 w-10 text-center">
+                        <input type="checkbox" wire:model.live="selectAll"
+                            class="w-5 h-5 text-blue-600 border-gray-300 rounded cursor-pointer focus:ring-blue-500">
+                    </th>
                     <th class="px-6 py-4 text-left font-bold text-gray-500 uppercase text-xs w-16">No</th>
                     <th class="px-6 py-4 text-left font-bold text-gray-500 uppercase text-xs">Nama Paket</th>
                     <th class="px-6 py-4 text-left font-bold text-gray-500 uppercase text-xs">Kategori</th>
@@ -62,10 +111,18 @@ new class extends Component {
             </thead>
             <tbody class="divide-y divide-gray-200 bg-white">
                 @forelse($packages as $index => $package)
-                    <tr class="hover:bg-gray-50">
+                    <tr
+                        class="transition-colors {{ in_array($package->id, $selected) ? 'bg-blue-50' : 'hover:bg-gray-50' }}">
+
+                        <td class="px-6 py-4 text-center">
+                            <input type="checkbox" wire:model.live="selected" value="{{ $package->id }}"
+                                class="w-5 h-5 text-blue-600 border-gray-300 rounded cursor-pointer focus:ring-blue-500">
+                        </td>
+
                         <td class="px-6 py-4 text-sm text-gray-500">{{ $packages->firstItem() + $index }}</td>
                         <td class="px-6 py-4 font-bold text-gray-900">{{ $package->title }}</td>
-                        <td class="px-6 py-4"><span
+                        <td class="px-6 py-4">
+                            <span
                                 class="bg-blue-100 text-blue-800 px-2 py-1 rounded text-xs font-semibold">{{ $package->examCategory->name }}</span>
                         </td>
                         <td class="px-6 py-4 text-sm font-medium">⏱️ {{ $package->time_limit }} Menit</td>
@@ -75,16 +132,15 @@ new class extends Component {
                                 class="bg-indigo-100 text-indigo-700 hover:bg-indigo-200 px-3 py-1 rounded transition-colors font-bold shadow-sm">
                                 ⚙️ Kelola Soal
                             </a>
-
                             <a href="{{ route('admin.packages.edit', $package->id) }}"
-                                class="bg-yellow-100 text-yellow-700 hover:bg-yellow-200 px-3 py-1 rounded transition-colors">Edit</a>
+                                class="bg-yellow-100 text-yellow-700 hover:bg-yellow-200 px-3 py-1 rounded transition-colors font-bold">Edit</a>
                             <button wire:click="delete({{ $package->id }})" wire:confirm="Hapus paket ini?"
-                                class="bg-red-100 text-red-700 hover:bg-red-200 px-3 py-1 rounded transition-colors">Hapus</button>
+                                class="bg-red-100 text-red-700 hover:bg-red-200 px-3 py-1 rounded transition-colors font-bold">Hapus</button>
                         </td>
                     </tr>
                 @empty
                     <tr>
-                        <td colspan="5" class="px-6 py-8 text-center text-gray-500">Paket tidak ditemukan.</td>
+                        <td colspan="6" class="px-6 py-8 text-center text-gray-500">Paket tidak ditemukan.</td>
                     </tr>
                 @endforelse
             </tbody>

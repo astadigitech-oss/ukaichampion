@@ -29,6 +29,11 @@ Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
 // 3. Rute Khusus USER (Dilindungi oleh Satpam 'auth:web')
 Route::middleware('auth:web')->group(function () {
     Route::get('/dashboard', [UserDashboardController::class, 'index'])->name('user.dashboard');
+    // Rute Ujian
+    Route::post('/exam/{package}/start', [\App\Http\Controllers\User\ExamController::class, 'startExam'])->name('exam.start');
+
+    // Rute Halaman Pengerjaan Ujian
+    Route::get('/exam/play/{result_id}', [\App\Http\Controllers\User\ExamController::class, 'play'])->name('exam.play');
 });
 
 // 4. Rute Khusus ADMIN (Dilindungi oleh Satpam 'auth:admin')

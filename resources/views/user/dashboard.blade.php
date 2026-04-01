@@ -3,6 +3,12 @@
 @section('title', 'Dashboard Peserta - CBT APP')
 
 @section('content')
+    @if (session('error'))
+        <div
+            class="bg-red-100 border-l-4 border-red-500 text-red-700 p-4 mb-6 rounded-lg shadow-sm font-bold flex items-center gap-2">
+            <span>⚠️</span> {{ session('error') }}
+        </div>
+    @endif
     <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-100 mb-6 border-l-4 border-l-blue-500">
         <h2 class="text-2xl font-bold text-gray-800">Selamat datang kembali, {{ auth()->user()->name }}!</h2>
         <p class="text-gray-500 mt-1">Mari persiapkan ujianmu dengan maksimal hari ini.</p>
@@ -60,10 +66,13 @@
                 </div>
                 <div class="p-4 border-t border-gray-100 bg-gray-50">
                     @if ($package->questions_count > 0)
-                        <a href="#"
-                            class="block w-full text-center bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-lg transition-colors">
-                            Mulai Kerjakan
-                        </a>
+                        <form action="{{ route('exam.start', $package->id) }}" method="POST" class="m-0 p-0">
+                            @csrf
+                            <button type="submit"
+                                class="w-full text-center bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-lg transition-colors shadow-sm">
+                                🚀 Mulai Kerjakan
+                            </button>
+                        </form>
                     @else
                         <button disabled
                             class="block w-full text-center bg-gray-300 text-gray-500 font-bold py-2 px-4 rounded-lg cursor-not-allowed">

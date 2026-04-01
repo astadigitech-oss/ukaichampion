@@ -27,9 +27,9 @@
 
         <div class="flex items-center justify-between mb-6">
             <h1 class="text-3xl font-bold text-gray-800">Tulis Soal Baru</h1>
-            <a href="{{ route('admin.questions.index') }}"
+            <a href="{{ route('admin.packages.show', $selectedPackageId) }}"
                 class="text-gray-500 hover:text-gray-800 font-semibold transition-colors">
-                ✕ Kembali ke Bank Soal
+                ✕ Batal & Kembali ke Paket
             </a>
         </div>
         @if (session('success'))

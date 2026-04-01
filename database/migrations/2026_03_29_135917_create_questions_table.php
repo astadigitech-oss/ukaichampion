@@ -17,11 +17,11 @@ return new class extends Migration
             $table->foreignId('exam_package_id')->constrained()->cascadeOnDelete();
 
             $table->text('question_text'); // Teks pertanyaan
-            $table->string('option_a')->nullable(); // Dibuat nullable jika soal hanya sampai A
-            $table->string('option_b')->nullable(); // Dibuat nullable jika soal hanya sampai A
-            $table->string('option_c')->nullable(); // Dibuat nullable jika soal hanya sampai B
-            $table->string('option_d')->nullable(); // Dibuat nullable jika soal hanya sampai c
-            $table->string('option_e')->nullable(); // Dibuat nullable jika soal hanya sampai D
+            $table->text('option_a')->nullable(); // Dibuat nullable jika soal hanya sampai A
+            $table->text('option_b')->nullable(); // Dibuat nullable jika soal hanya sampai A
+            $table->text('option_c')->nullable(); // Dibuat nullable jika soal hanya sampai B
+            $table->text('option_d')->nullable(); // Dibuat nullable jika soal hanya sampai c
+            $table->text('option_e')->nullable(); // Dibuat nullable jika soal hanya sampai D
 
             $table->char('correct_answer', 1); // Kunci jawaban (A/B/C/D/E)
             $table->text('explanation')->nullable(); // Teks pembahasan soal
