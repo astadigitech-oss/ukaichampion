@@ -12,7 +12,7 @@ use App\Http\Controllers\Admin\AdminDashboardController;
 
 // 1. Halaman Utama (Sementara kita arahkan ke halaman bawaan Laravel)
 Route::get('/', function () {
-    return view('welcome');
+    return redirect()->route('login');
 });
 // Rute untuk menampilkan halaman Form (GET)
 Route::get('/login', function () {
