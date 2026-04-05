@@ -17,17 +17,27 @@ class UserDashboardController extends Controller
             return redirect()->route('login');
         }
 
-        $packages = ExamPackage::with('examCategory')
-            ->withCount('questions')
-            ->whereHas('examCategory', function ($query) {
-                $query->whereNull('deleted_at');
-            })
-            ->latest()
-            ->take(3)
-            ->get();
+        $user = $request->user();
 
-        // 3. GUNAKAN $request->user()->id SEBAGAI GANTI auth()->id()
-        $completedExamsCount = UserResult::where('user_id', $request->user()->id)
+        // 1. Siapkan Query Dasar (Gabungan kodemu & logika Task 3)
+        $query = ExamPackage::with('examCategory')
+            ->withCount('questions')
+            ->has('questions') // TASK 3: Wajib punya minimal 1 soal
+            ->whereHas('examCategory', function ($q) {
+                $q->whereNull('deleted_at'); // Mempertahankan kodemu yang bagus ini
+            });
+
+        // 2. TASK 3: Filter Kasta (Freemium)
+        // Jika user BUKAN premium, saring HANYA TAMPILKAN paket yang gratis
+        if (!$user->is_premium) {
+            $query->where('is_premium', false);
+        }
+
+        // 3. Eksekusi: Ambil 3 data terbaru
+        $packages = $query->latest()->take(3)->get();
+
+        // 4. Hitung ujian yang sudah selesai
+        $completedExamsCount = UserResult::where('user_id', $user->id)
             ->whereNotNull('finished_at')
             ->count();
 

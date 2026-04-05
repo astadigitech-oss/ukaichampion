@@ -24,29 +24,36 @@ new class extends Component {
 
     public function with(): array
     {
-        $userId = Auth::id();
+        $user = Auth::user(); // Ambil data user beserta status is_premium-nya
 
-        $packages = ExamPackage::with('examCategory')
+        // 1. Siapkan Query Dasar
+        $query = ExamPackage::with('examCategory')
             ->withCount('questions')
-            // KUNCI PERBAIKAN: Hanya tampilkan paket yang memiliki minimal 1 soal
-            ->has('questions')
-            ->whereHas('examCategory', function ($query) {
-                $query->whereNull('deleted_at');
+            ->has('questions') // Pastikan ada soal
+            ->whereHas('examCategory', function ($q) {
+                $q->whereNull('deleted_at');
             })
-            ->when($this->selectedCategory, function ($query) {
-                $query->where('exam_category_id', $this->selectedCategory);
+            ->when($this->selectedCategory, function ($q) {
+                $q->where('exam_category_id', $this->selectedCategory);
             })
-            ->where(function ($query) {
-                $query->where('title', 'like', '%' . $this->search . '%')->orWhereHas('examCategory', function ($q) {
-                    $q->whereNull('deleted_at')->where('name', 'like', '%' . $this->search . '%');
+            ->where(function ($q) {
+                $q->where('title', 'like', '%' . $this->search . '%')->orWhereHas('examCategory', function ($subQ) {
+                    $subQ->whereNull('deleted_at')->where('name', 'like', '%' . $this->search . '%');
                 });
-            })
-            ->latest()
-            ->paginate(10);
+            });
+
+        // 2. LOGIKA FREEMIUM (TASK 3)
+        // Jika user bukan premium, saring hanya tampilkan yang is_premium = false
+        if (!$user->is_premium) {
+            $query->where('is_premium', false);
+        }
+
+        // 3. Eksekusi Query
+        $packages = $query->latest()->paginate(10);
 
         $packageIds = $packages->pluck('id');
 
-        $allUserResults = UserResult::where('user_id', $userId)->whereIn('exam_package_id', $packageIds)->whereNotNull('finished_at')->latest('finished_at')->get()->groupBy('exam_package_id');
+        $allUserResults = UserResult::where('user_id', $user->id)->whereIn('exam_package_id', $packageIds)->whereNotNull('finished_at')->latest('finished_at')->get()->groupBy('exam_package_id');
 
         return [
             'packages' => $packages,
@@ -97,6 +104,14 @@ new class extends Component {
                                 class="bg-blue-100 text-blue-700 text-[10px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wider">
                                 {{ $package->examCategory?->name ?? 'Tanpa Kategori' }}
                             </span>
+
+                            @if ($package->is_premium)
+                                <span
+                                    class="bg-red-100 text-red-800 text-[10px] font-bold px-2 py-0.5 rounded-full border border-red-200 uppercase tracking-wider">
+                                    💎 Premium
+                                </span>
+                            @endif
+
                             <span class="text-gray-500 text-xs font-bold flex items-center gap-1">
                                 ⏱️ {{ $package->time_limit }} Menit
                             </span>

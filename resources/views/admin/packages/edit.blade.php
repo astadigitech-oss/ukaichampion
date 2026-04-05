@@ -58,6 +58,24 @@
                 @enderror
             </div>
 
+            <div class="mb-8 bg-gray-50 p-4 border rounded-lg">
+                <div class="flex justify-between items-center">
+                    <div>
+                        <label class="text-gray-700 font-bold block mb-1">Tipe Paket Ujian</label>
+                        <p class="text-xs text-gray-500">Tentukan apakah paket ini berbayar atau gratis.</p>
+                    </div>
+
+                    <label class="inline-flex items-center cursor-pointer">
+                        <span class="mr-3 text-sm font-bold text-gray-700">Premium</span>
+                        <input type="checkbox" name="is_premium" class="sr-only peer" value="1"
+                            {{ $package->is_premium ? 'checked' : '' }}>
+                        <div
+                            class="relative w-11 h-6 bg-gray-300 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-red-300 rounded-full peer peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-red-600">
+                        </div>
+                    </label>
+                </div>
+            </div>
+
             <button type="submit"
                 class="w-full bg-yellow-500 hover:bg-yellow-600 text-white font-bold py-3 px-4 rounded-lg shadow transition-colors">
                 Simpan Perubahan

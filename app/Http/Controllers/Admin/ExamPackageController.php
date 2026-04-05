@@ -12,9 +12,40 @@ class ExamPackageController extends Controller
     // 1. Tampilkan Daftar Paket Soal
     // Jangan lupa pastikan 'use Illuminate\Http\Request;' ada di bagian atas file
 
-    public function index()
+    public function index(\Illuminate\Http\Request $request)
     {
-        return view('admin.packages.index'); // Hapus query pencariannya
+        // Tangkap data dari form filter
+        $search = $request->input('search');
+        $categoryId = $request->input('category_id');
+        $type = $request->input('type'); // Filter baru untuk Freemium
+
+        $query = \App\Models\ExamPackage::with('examCategory');
+
+        // 1. Filter Pencarian Nama
+        if ($search) {
+            $query->where('title', 'like', '%' . $search . '%');
+        }
+
+        // 2. Filter Kategori
+        if ($categoryId) {
+            $query->where('exam_category_id', $categoryId);
+        }
+
+        // 3. Filter Premium atau Gratis
+        if ($type === 'premium') {
+            $query->where('is_premium', true);
+        } elseif ($type === 'gratis') {
+            $query->where('is_premium', false);
+        }
+
+        $query = \App\Models\ExamPackage::with('examCategory')->withCount('questions');
+        // Eksekusi data (withQueryString agar saat pindah halaman, filter tidak hilang)
+        $packages = $query->latest()->paginate(10)->withQueryString();
+
+        // Ambil data kategori untuk dropdown
+        $categories = \App\Models\ExamCategory::orderBy('name')->get();
+
+        return view('admin.packages.index', compact('packages', 'categories', 'search', 'categoryId', 'type'));
     }
 
     // 2. Tampilkan Form Tambah
@@ -28,19 +59,18 @@ class ExamPackageController extends Controller
     // 3. Simpan Data ke Database
     public function store(Request $request)
     {
-        $request->validate([
-            'exam_category_id' => 'required|exists:exam_categories,id', // Pastikan ID kategori valid
+        $validated = $request->validate([
+            'exam_category_id' => 'required|exists:exam_categories,id',
             'title' => 'required|string|max:255',
-            'time_limit' => 'required|integer|min:1', // Waktu minimal 1 menit
+            'time_limit' => 'required|integer|min:1',
         ]);
 
-        ExamPackage::create([
-            'exam_category_id' => $request->exam_category_id,
-            'title' => $request->title,
-            'time_limit' => $request->time_limit,
-        ]);
+        // Tangkap status checkbox: Jika dicentang bernilai true, jika tidak bernilai false
+        $validated['is_premium'] = $request->has('is_premium');
 
-        return redirect()->route('admin.packages.index')->with('success', 'Paket soal berhasil ditambahkan!');
+        \App\Models\ExamPackage::create($validated);
+
+        return redirect()->route('admin.packages.index')->with('success', 'Paket ujian berhasil ditambahkan.');
     }
 
     public function show(string $id)
@@ -59,21 +89,22 @@ class ExamPackageController extends Controller
     }
 
     // 5. Update Data di Database
-    public function update(Request $request, ExamPackage $package)
+    public function update(Request $request, $id)
     {
-        $request->validate([
+        $package = \App\Models\ExamPackage::findOrFail($id);
+
+        $validated = $request->validate([
             'exam_category_id' => 'required|exists:exam_categories,id',
             'title' => 'required|string|max:255',
             'time_limit' => 'required|integer|min:1',
         ]);
 
-        $package->update([
-            'exam_category_id' => $request->exam_category_id,
-            'title' => $request->title,
-            'time_limit' => $request->time_limit,
-        ]);
+        // Tangkap status saklar saat diedit (jika dicentang = true, jika mati = false)
+        $validated['is_premium'] = $request->has('is_premium');
 
-        return redirect()->route('admin.packages.index')->with('success', 'Paket soal berhasil diperbarui!');
+        $package->update($validated);
+
+        return redirect()->route('admin.packages.index')->with('success', 'Paket ujian berhasil diperbarui.');
     }
 
     // 6. Hapus Data (Soft Delete)

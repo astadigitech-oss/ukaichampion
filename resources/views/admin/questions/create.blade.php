@@ -103,8 +103,10 @@
                                     {{ $opt }}</label>
 
                                 <div id="text-wrapper-{{ strtolower($opt) }}" class="mode-text">
-                                    <textarea name="option_{{ strtolower($opt) }}" rows="2"
-                                        class="w-full px-3 py-2 border rounded focus:border-blue-500 outline-none" placeholder="Ketik teks jawaban..."></textarea>
+                                    <div id="editor-option-{{ strtolower($opt) }}" class="editor-option bg-white">
+                                    </div>
+                                    <input type="hidden" name="option_{{ strtolower($opt) }}"
+                                        id="input-option-{{ strtolower($opt) }}">
                                 </div>
 
                                 <div id="image-wrapper-{{ strtolower($opt) }}" class="mode-image hidden">

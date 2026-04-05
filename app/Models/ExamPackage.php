@@ -13,6 +13,7 @@ class ExamPackage extends Model
         'exam_category_id',
         'title',
         'time_limit',
+        'is_premium', // <--- Tambahkan ini
     ];
 
     // Relasi ke Atas: Dimiliki oleh 1 Kategori

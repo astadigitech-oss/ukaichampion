@@ -67,6 +67,12 @@
                             class="bg-blue-50 text-blue-600 text-xs font-bold px-3 py-1 rounded-full uppercase tracking-wider">
                             {{ $package->examCategory?->name ?? 'Tanpa Kategori' }}
                         </span>
+                        @if ($package->is_premium)
+                            <span
+                                class="bg-red-100 text-red-800 text-xs font-bold px-3 py-1 rounded-full border border-red-200 shadow-sm ml-2">
+                                💎 Premium
+                            </span>
+                        @endif
                         <span class="text-gray-400 text-sm font-medium flex items-center gap-1">⏱️
                             {{ $package->time_limit }} Menit</span>
                     </div>

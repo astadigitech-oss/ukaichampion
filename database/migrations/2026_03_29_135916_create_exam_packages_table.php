@@ -13,11 +13,12 @@ return new class extends Migration
     {
         Schema::create('exam_packages', function (Blueprint $table) {
             $table->id();
-            // Relasi ke tabel exam_categories
-            $table->foreignId('exam_category_id')->constrained()->cascadeOnDelete();
+            $table->foreignId('exam_category_id')->nullable()->constrained()->nullOnDelete();
+            $table->string('title');
+            $table->integer('time_limit')->default(60); // Durasi dalam menit
 
-            $table->string('title'); // Contoh: "Dasar Laravel"
-            $table->integer('time_limit'); // Durasi ujian dalam satuan menit
+            // FITUR TASK 3: Penanda Paket Premium (Default: true)
+            $table->boolean('is_premium')->default(true);
 
             $table->timestamps();
             $table->softDeletes();
