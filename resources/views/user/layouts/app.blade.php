@@ -39,6 +39,11 @@
                 class="block py-3 px-4 rounded transition duration-200 mb-2 font-medium hover:bg-blue-700 text-blue-100">
                 💳 Upgrade Premium
             </a>
+
+            <a href="{{ route('user.contact') }}"
+                class="block py-3 px-4 rounded-xl transition duration-200 mb-2 font-medium {{ request()->routeIs('user.contact') ? 'bg-blue-900 shadow-inner' : 'hover:bg-blue-700/50 text-blue-100' }}">
+                🎧 Hubungi Admin
+            </a>
         </div>
         <div class="p-4 border-t border-blue-700">
             <form action="{{ route('logout') }}" method="POST">

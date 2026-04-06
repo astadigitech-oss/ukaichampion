@@ -4,6 +4,7 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Auth\AuthController;
 use App\Http\Controllers\User\UserDashboardController;
 use App\Http\Controllers\Admin\AdminDashboardController;
+use App\Http\Controllers\User\ContactController;
 // Pastikan ini ada di bagian paling atas file web.php
 
 
@@ -46,6 +47,7 @@ Route::middleware('auth:web')->group(function () {
     Route::get('/user/history/{id}/review', [UserDashboardController::class, 'review'])->name('user.review');
     Route::get('/profile', [UserDashboardController::class, 'profile'])->name('user.profile');
     Route::get('/user/upgrade', [UserDashboardController::class, 'upgrade'])->name('user.upgrade');
+    Route::get('/contact', [ContactController::class, 'index'])->name('user.contact');
 });
 
 // 4. Rute Khusus ADMIN (Dilindungi oleh Satpam 'auth:admin')
