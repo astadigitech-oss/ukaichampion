@@ -64,9 +64,18 @@ class UserDashboardController extends Controller
     // Halaman Review Jawaban (LOGIKA PINDAH KE SINI)
     public function review(Request $request, $id)
     {
-        // Pastikan user hanya bisa melihat hasil miliknya sendiri
+        // 1. GEMBOK BACKEND: Ambil data user paling fresh dari database
+        $user = \App\Models\User::find($request->user()->id);
+
+        // 2. TENDANG JIKA BUKAN PREMIUM
+        if (!$user->is_premium) {
+            return redirect()->route('user.history') // Lempar kembali ke halaman history
+                ->with('error', 'Akses ditolak! Anda harus Upgrade ke Premium untuk melihat pembahasan soal.');
+        }
+
+        // 3. KODE ASLI: Pastikan user hanya bisa melihat hasil miliknya sendiri
         $result = UserResult::with(['examPackage.examCategory', 'userAnswers.question'])
-            ->where('user_id', $request->user()->id)
+            ->where('user_id', $user->id)
             ->findOrFail($id);
 
         return view('user.review', compact('result'));

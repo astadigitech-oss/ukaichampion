@@ -13,7 +13,9 @@ class ExamController extends Controller
     // Fungsi saat tombol "Mulai Kerjakan" ditekan
     public function startExam($package_id)
     {
-        $user = Auth::user();
+        // KUNCI PERBAIKAN: Ambil data user langsung dari tabel Database 
+        // menggunakan ID orang yang sedang login. Datanya pasti yang paling baru (fresh)!
+        $user = \App\Models\User::find(Auth::id());
 
         // 1. AMBIL DATA PAKET TERLEBIH DAHULU
         $package = ExamPackage::withCount('questions')->findOrFail($package_id);
@@ -24,10 +26,10 @@ class ExamController extends Controller
                 ->with('error', 'Paket ujian ini belum memiliki soal.');
         }
 
-        // 3. CEK AKSES PREMIUM: Tolak JIKA paketnya premium TAPI usernya gratisan
+        // 3. CEK AKSES PREMIUM (Satu pesan error seragam untuk semua)
         if ($package->is_premium && !$user->is_premium) {
             return redirect()->route('user.exams')
-                ->with('error', 'Akses ditolak! Anda harus Upgrade ke Premium untuk mengerjakan ujian ini.');
+                ->with('error', 'Akses ditolak! Anda harus Upgrade ke Premium untuk membuka ujian ini.');
         }
 
         // 4. CEK ATTEMPT: Cari tahu ini percobaan ke-berapa

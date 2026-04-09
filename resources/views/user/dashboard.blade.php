@@ -35,9 +35,11 @@
                     </p>
                 @else
                     <p class="text-sm text-gray-600 mb-3">Akses ujian terbatas. Buka semua fitur sekarang.</p>
-                    <button
-                        class="w-full bg-yellow-500 hover:bg-yellow-600 text-white font-bold py-2 rounded shadow-sm transition">Upgrade
-                        Akses</button>
+                    <a href="{{ route('user.upgrade') }}">
+                        <button
+                            class="w-full bg-yellow-500 hover:bg-yellow-600 text-white font-bold py-2 rounded shadow-sm transition">Upgrade
+                            Akses</button>
+                    </a>
                 @endif
             </div>
         </div>

@@ -19,11 +19,16 @@ class CheckPremiumExpiration
 
             if (Carbon::now()->greaterThan($user->premium_until)) {
 
-                // PERBAIKAN DI SINI: Kita panggil Model User-nya secara langsung
-                User::find($user->id)->update([
+                // 1. Ambil model dari DB dan langsung Update
+                $updatedUser = User::find($user->id);
+                $updatedUser->update([
                     'is_premium' => false,
                     'premium_until' => null,
                 ]);
+
+                // 2. PERBAIKAN DI SINI: Timpa data user di memori dengan data yang baru!
+                // Ini menggantikan fungsi refresh() yang error
+                Auth::setUser($updatedUser);
 
                 session()->flash('error', 'Masa aktif Premium Anda telah habis. Anda sekarang kembali menjadi akun Reguler.');
             }
