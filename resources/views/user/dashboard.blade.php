@@ -15,6 +15,7 @@
             <span>✅</span> {{ session('success') }}
         </div>
     @endif
+
     <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-100 mb-6 border-l-4 border-l-blue-500">
         <h2 class="text-2xl font-bold text-gray-800">Selamat datang kembali, {{ auth()->user()->name }}!</h2>
         <p class="text-gray-500 mt-1">Mari persiapkan ujianmu dengan maksimal hari ini.</p>
@@ -22,16 +23,27 @@
 
     <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-10">
         <div
-            class="bg-white p-6 rounded-xl shadow-sm border border-t-4 {{ auth()->user()->is_premium ? 'border-t-green-500' : 'border-t-yellow-500' }}">
+            class="bg-white p-6 rounded-xl shadow-sm border border-t-4 {{ $isPremiumActive ? 'border-t-green-500' : 'border-t-gray-400' }}">
             <h3 class="text-gray-500 text-sm font-bold uppercase tracking-wider mb-3">Status Akses</h3>
+
             <span
-                class="px-3 py-1 text-sm font-bold rounded-full {{ auth()->user()->is_premium ? 'bg-green-100 text-green-700' : 'bg-yellow-100 text-yellow-700' }}">
-                {{ auth()->user()->is_premium ? '👑 Akun Premium' : '🔒 Akun Gratis' }}
+                class="px-3 py-1 text-sm font-bold rounded-full {{ $isPremiumActive ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-700' }}">
+                @if ($isPremiumActive && auth()->user()->premium_tier == 'ultra')
+                    🔮 Ultra Member
+                @elseif($isPremiumActive && auth()->user()->premium_tier == 'pro')
+                    👑 Pro Member
+                @elseif($isPremiumActive && auth()->user()->premium_tier == 'plus')
+                    ✨ Plus Member
+                @else
+                    🆓 Akun Reguler
+                @endif
             </span>
+
             <div class="mt-4 pt-4 border-t border-gray-50">
-                @if (auth()->user()->is_premium)
-                    <p class="text-sm text-gray-600">Berlaku sampai: <br><span
-                            class="font-bold text-gray-800">{{ auth()->user()->premium_until ? \Carbon\Carbon::parse(auth()->user()->premium_until)->format('d M Y') : '-' }}</span>
+                @if ($isPremiumActive)
+                    <p class="text-sm text-gray-600">Berlaku sampai: <br>
+                        <span
+                            class="font-bold text-gray-800">{{ \Carbon\Carbon::parse(auth()->user()->premium_until)->format('d M Y') }}</span>
                     </p>
                 @else
                     <p class="text-sm text-gray-600 mb-3">Akses ujian terbatas. Buka semua fitur sekarang.</p>
@@ -69,20 +81,35 @@
                             class="bg-blue-50 text-blue-600 text-xs font-bold px-3 py-1 rounded-full uppercase tracking-wider">
                             {{ $package->examCategory?->name ?? 'Tanpa Kategori' }}
                         </span>
-                        @if ($package->is_premium)
+
+                        @if ($package->minimum_tier == 'ultra')
                             <span
-                                class="bg-red-100 text-red-800 text-xs font-bold px-3 py-1 rounded-full border border-red-200 shadow-sm ml-2">
-                                💎 Premium
-                            </span>
+                                class="bg-purple-100 text-purple-800 text-xs font-bold px-3 py-1 rounded-full border border-purple-200 shadow-sm ml-2 whitespace-nowrap">🔮
+                                Ultra</span>
+                        @elseif ($package->minimum_tier == 'pro')
+                            <span
+                                class="bg-yellow-100 text-yellow-800 text-xs font-bold px-3 py-1 rounded-full border border-yellow-200 shadow-sm ml-2 whitespace-nowrap">👑
+                                Pro</span>
+                        @elseif ($package->minimum_tier == 'plus')
+                            <span
+                                class="bg-blue-100 text-blue-800 text-xs font-bold px-3 py-1 rounded-full border border-blue-200 shadow-sm ml-2 whitespace-nowrap">✨
+                                Plus</span>
+                        @else
+                            <span
+                                class="bg-gray-100 text-gray-600 text-xs font-bold px-3 py-1 rounded-full border border-gray-200 shadow-sm ml-2 whitespace-nowrap">🆓
+                                Gratis</span>
                         @endif
-                        <span class="text-gray-400 text-sm font-medium flex items-center gap-1">⏱️
-                            {{ $package->time_limit }} Menit</span>
+
                     </div>
+
                     <h3 class="text-xl font-bold text-gray-900 mb-2 line-clamp-2">{{ $package->title }}</h3>
                     <div class="flex items-center gap-2 text-sm text-gray-500 mt-4">
-                        <span>📝 {{ $package->questions_count }} Butir Soal</span>
+                        <span class="flex items-center gap-1">⏱️ {{ $package->time_limit }} Menit</span>
+                        <span class="text-gray-300">|</span>
+                        <span>📝 {{ $package->questions_count }} Soal</span>
                     </div>
                 </div>
+
                 <div class="p-4 border-t border-gray-100 bg-gray-50">
                     @if ($package->questions_count > 0)
                         <form action="{{ route('exam.start', $package->id) }}" method="POST" class="m-0 p-0">

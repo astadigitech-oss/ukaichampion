@@ -67,6 +67,8 @@ new class extends Component {
         ]);
 
         try {
+            ini_set('max_execution_time', 300);
+            ini_set('memory_limit', '512M'); // Tambah memori agar tidak sesak napas
             Excel::import(new QuestionsImport($this->package->id), $this->excelFile);
             $this->excelFile = null; // Kosongkan file setelah sukses
             session()->flash('success', 'Ratusan soal berhasil di-import dari Excel! 🚀');
