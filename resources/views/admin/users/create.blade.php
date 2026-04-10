@@ -1,4 +1,4 @@
-@extends('admin.layouts.sidebar') {{-- Sesuaikan dengan nama layout admin kamu --}}
+@extends('admin.layouts.sidebar')
 
 @section('content')
     <div class="max-w-4xl mx-auto w-full">
@@ -49,25 +49,27 @@
                 </div>
 
                 <div class="mb-4">
-                    <label class="block text-gray-700 text-sm font-bold mb-2">Aktivasi Membership</label>
-                    <div class="flex items-center gap-4 bg-yellow-50 p-3 rounded-lg border border-yellow-200">
-                        <input type="checkbox" name="is_premium" id="is_premium" value="1"
-                            {{ old('is_premium') ? 'checked' : '' }} class="w-5 h-5 text-yellow-600 focus:ring-yellow-500"
-                            onchange="togglePremiumDate()">
-                        <label for="is_premium" class="text-sm font-bold text-yellow-800 cursor-pointer">Jadikan User
-                            Premium 👑</label>
-                    </div>
+                    <label class="block text-gray-700 text-sm font-bold mb-2">Tingkat Langganan (Kasta)</label>
+                    <select name="premium_tier" id="premium_tier" onchange="togglePremiumDate()"
+                        class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-yellow-200 outline-none bg-yellow-50 font-bold text-gray-800">
+                        <option value="gratis" {{ old('premium_tier') == 'gratis' ? 'selected' : '' }}>🆓 Akun Gratis
+                        </option>
+                        <option value="plus" {{ old('premium_tier') == 'plus' ? 'selected' : '' }}>✨ Plus Member</option>
+                        <option value="pro" {{ old('premium_tier') == 'pro' ? 'selected' : '' }}>👑 Pro Member</option>
+                        <option value="ultra" {{ old('premium_tier') == 'ultra' ? 'selected' : '' }}>🔮 Ultra Member
+                        </option>
+                    </select>
                 </div>
 
-                <div id="premium_date_container" class="mb-4 {{ old('is_premium') ? '' : 'hidden' }}">
+                <div id="premium_date_container"
+                    class="mb-4 {{ old('premium_tier') && old('premium_tier') != 'gratis' ? '' : 'hidden' }}">
                     <label class="block text-gray-700 text-sm font-bold mb-2">Berlaku Hingga</label>
-                    <input type="date" name="premium_until"
-                        class="w-full px-4 py-2 border @error('premium_until') border-red-500 bg-red-50 @else border-gray-300 @enderror rounded-lg focus:ring-2 focus:ring-yellow-200 outline-none"
-                        value="{{ old('premium_until', date('Y-m-d', strtotime('+1 year'))) }}">
+                    <input type="date" name="premium_until" value="{{ old('premium_until') }}"
+                        class="w-full px-4 py-2 border @error('premium_until') border-red-500 bg-red-50 @else border-gray-300 @enderror rounded-lg focus:ring-2 focus:ring-yellow-200 outline-none">
                     @error('premium_until')
                         <p class="text-red-500 text-xs italic mt-1">{{ $message }}</p>
                     @enderror
-                    <p class="text-xs text-gray-500 mt-1 italic">*Default: 1 tahun dari sekarang.</p>
+                    <p class="text-[10px] text-gray-500 mt-1 italic">*Kosongkan untuk otomatis 30 hari.</p>
                 </div>
             </div>
 
@@ -84,9 +86,10 @@
 
     <script>
         function togglePremiumDate() {
-            const checkbox = document.getElementById('is_premium');
+            const selectBox = document.getElementById('premium_tier');
             const container = document.getElementById('premium_date_container');
-            if (checkbox.checked) {
+
+            if (selectBox.value !== 'gratis') {
                 container.classList.remove('hidden');
             } else {
                 container.classList.add('hidden');

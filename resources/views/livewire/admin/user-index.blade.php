@@ -9,7 +9,6 @@ new class extends Component {
 
     public $search = '';
 
-    // FITUR BULK DELETE: Variabel penampung
     public $selected = [];
     public $selectAll = false;
 
@@ -20,11 +19,9 @@ new class extends Component {
         $this->selectAll = false;
     }
 
-    // FITUR BULK DELETE: Fungsi ketika Checkbox "Pilih Semua" diklik
     public function updatedSelectAll($value)
     {
         if ($value) {
-            // PERBAIKAN: Gunakan withTrashed() dan kelompokkan pencarian (grouping query)
             $this->selected = User::withTrashed()
                 ->where(function ($query) {
                     $query->where('name', 'like', '%' . $this->search . '%')->orWhere('email', 'like', '%' . $this->search . '%');
@@ -37,7 +34,6 @@ new class extends Component {
         }
     }
 
-    // FITUR BULK DELETE: Eksekusi penghapusan massal
     public function deleteSelected()
     {
         if (count($this->selected) > 0) {
@@ -54,32 +50,17 @@ new class extends Component {
         session()->flash('success', 'Akun user berhasil di-Banned (Nonaktifkan).');
     }
 
-    // FITUR BARU: Pulihkan User dari Banned
     public function restore($id)
     {
-        // Cari user walaupun dia sudah dihapus (withTrashed)
         $user = User::withTrashed()->findOrFail($id);
-        $user->restore(); // Kembalikan deleted_at menjadi null
+        $user->restore();
 
         session()->flash('success', 'Akun ' . $user->name . ' berhasil dipulihkan! Mereka bisa login kembali.');
-    }
-
-    public function togglePremium($id)
-    {
-        $user = User::findOrFail($id);
-        if ($user->is_premium) {
-            $user->update(['is_premium' => false, 'premium_until' => null]);
-            session()->flash('success', 'Status Premium berhasil dicabut dari akun ' . $user->name);
-        } else {
-            $user->update(['is_premium' => true, 'premium_until' => now()->addYear()]);
-            session()->flash('success', 'Akun ' . $user->name . ' berhasil di-upgrade ke Premium! 👑');
-        }
     }
 
     public function with(): array
     {
         return [
-            // PERBAIKAN: Gunakan withTrashed() agar user Banned tetap tampil di tabel
             'users' => User::withTrashed()
                 ->where(function ($query) {
                     $query->where('name', 'like', '%' . $this->search . '%')->orWhere('email', 'like', '%' . $this->search . '%');
@@ -127,7 +108,7 @@ new class extends Component {
                     </th>
                     <th class="px-6 py-4 text-left font-bold text-gray-500 uppercase text-xs w-16">No</th>
                     <th class="px-6 py-4 text-left font-bold text-gray-500 uppercase text-xs">Informasi User</th>
-                    <th class="px-6 py-4 text-center font-bold text-gray-500 uppercase text-xs">Status</th>
+                    <th class="px-6 py-4 text-center font-bold text-gray-500 uppercase text-xs">Status Kasta</th>
                     <th class="px-6 py-4 text-center font-bold text-gray-500 uppercase text-xs">Masa Aktif</th>
                     <th class="px-6 py-4 text-right font-bold text-gray-500 uppercase text-xs">Aksi</th>
                 </tr>
@@ -151,7 +132,8 @@ new class extends Component {
                                 <div class="ml-4">
                                     <div
                                         class="text-sm font-bold {{ $item->trashed() ? 'text-gray-500 line-through' : 'text-gray-900' }}">
-                                        {{ $item->name }}</div>
+                                        {{ $item->name }}
+                                    </div>
                                     <div class="text-sm text-gray-500">{{ $item->email }}</div>
                                 </div>
                             </div>
@@ -160,25 +142,31 @@ new class extends Component {
                         <td class="px-6 py-4 text-center">
                             @if ($item->trashed())
                                 <span
-                                    class="bg-red-100 text-red-800 px-3 py-1 rounded-full text-xs font-bold border border-red-200">
+                                    class="bg-red-100 text-red-800 px-3 py-1 rounded-full text-[10px] font-bold border border-red-200">
                                     🚫 BANNED
                                 </span>
                             @elseif ($item->is_premium && $item->premium_until && \Carbon\Carbon::parse($item->premium_until)->isPast())
                                 <span
-                                    class="bg-red-100 text-red-800 px-3 py-1 rounded-full text-xs font-bold border border-red-200"
-                                    title="Akan otomatis jadi Reguler saat user ini login">
+                                    class="bg-gray-200 text-gray-600 px-3 py-1 rounded-full text-[10px] font-bold border border-gray-300"
+                                    title="Masa langganan telah habis">
                                     ❌ KEDALUWARSA
                                 </span>
-                            @elseif ($item->is_premium)
+                            @elseif ($item->is_premium && $item->premium_tier == 'ultra')
                                 <span
-                                    class="bg-yellow-100 text-yellow-800 px-3 py-1 rounded-full text-xs font-bold border border-yellow-200">
-                                    👑 PREMIUM
-                                </span>
+                                    class="bg-purple-100 text-purple-800 px-3 py-1 rounded-full text-[10px] font-bold border border-purple-200">🔮
+                                    ULTRA</span>
+                            @elseif ($item->is_premium && $item->premium_tier == 'pro')
+                                <span
+                                    class="bg-yellow-100 text-yellow-800 px-3 py-1 rounded-full text-[10px] font-bold border border-yellow-200">👑
+                                    PRO</span>
+                            @elseif ($item->is_premium && $item->premium_tier == 'plus')
+                                <span
+                                    class="bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-[10px] font-bold border border-blue-200">✨
+                                    PLUS</span>
                             @else
                                 <span
-                                    class="bg-gray-100 text-gray-600 px-3 py-1 rounded-full text-xs font-bold border border-gray-200">
-                                    REGULER
-                                </span>
+                                    class="bg-gray-100 text-gray-600 px-3 py-1 rounded-full text-[10px] font-bold border border-gray-200">🆓
+                                    GRATIS</span>
                             @endif
                         </td>
 
@@ -208,11 +196,6 @@ new class extends Component {
                                     ♻️ Pulihkan
                                 </button>
                             @else
-                                <button wire:click="togglePremium({{ $item->id }})"
-                                    class="inline-flex items-center bg-gray-100 hover:bg-gray-200 font-bold px-3 py-1.5 rounded-lg text-xs transition-colors mr-1 shadow-sm border border-gray-200">
-                                    {{ $item->is_premium ? '⬇️ Cabut' : '👑 Upgrade' }}
-                                </button>
-
                                 <a href="{{ route('admin.users.edit', $item->id) }}"
                                     class="inline-flex items-center bg-yellow-100 text-yellow-700 hover:bg-yellow-200 font-bold px-3 py-1.5 rounded-lg text-xs transition-colors mr-1 shadow-sm border border-yellow-200">
                                     ✏️ Edit

@@ -1,4 +1,4 @@
-@extends('admin.layouts.sidebar') {{-- Sesuaikan dengan nama layout admin kamu --}}
+@extends('admin.layouts.sidebar')
 
 @section('content')
     <div class="max-w-4xl mx-auto w-full">
@@ -18,13 +18,13 @@
             <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div class="mb-4">
                     <label class="block text-gray-700 text-sm font-bold mb-2">Nama Lengkap</label>
-                    <input type="text" name="name" value="{{ $user->name }}"
+                    <input type="text" name="name" value="{{ old('name', $user->name) }}"
                         class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-200 outline-none" required>
                 </div>
 
                 <div class="mb-4">
                     <label class="block text-gray-700 text-sm font-bold mb-2">Alamat Email</label>
-                    <input type="email" name="email" value="{{ $user->email }}"
+                    <input type="email" name="email" value="{{ old('email', $user->email) }}"
                         class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-200 outline-none" required>
                 </div>
 
@@ -37,21 +37,27 @@
                 </div>
 
                 <div class="mb-4">
-                    <label class="block text-gray-700 text-sm font-bold mb-2">Membership</label>
-                    <div class="flex items-center gap-4 bg-yellow-50 p-3 rounded-lg border border-yellow-200">
-                        <input type="checkbox" name="is_premium" id="is_premium" value="1"
-                            class="w-5 h-5 text-yellow-600 focus:ring-yellow-500" {{ $user->is_premium ? 'checked' : '' }}
-                            onchange="togglePremiumDate()">
-                        <label for="is_premium" class="text-sm font-bold text-yellow-800 cursor-pointer">Status Premium
-                            👑</label>
-                    </div>
+                    <label class="block text-gray-700 text-sm font-bold mb-2">Tingkat Langganan (Kasta)</label>
+                    <select name="premium_tier" id="premium_tier" onchange="togglePremiumDate()"
+                        class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-yellow-200 outline-none bg-yellow-50 font-bold text-gray-800">
+                        <option value="gratis" {{ old('premium_tier', $user->premium_tier) == 'gratis' ? 'selected' : '' }}>
+                            🆓 Akun Gratis</option>
+                        <option value="plus" {{ old('premium_tier', $user->premium_tier) == 'plus' ? 'selected' : '' }}>✨
+                            Plus Member</option>
+                        <option value="pro" {{ old('premium_tier', $user->premium_tier) == 'pro' ? 'selected' : '' }}>👑
+                            Pro Member</option>
+                        <option value="ultra" {{ old('premium_tier', $user->premium_tier) == 'ultra' ? 'selected' : '' }}>
+                            🔮 Ultra Member</option>
+                    </select>
                 </div>
 
-                <div id="premium_date_container" class="mb-4 {{ $user->is_premium ? '' : 'hidden' }}">
+                <div id="premium_date_container"
+                    class="mb-4 {{ old('premium_tier', $user->premium_tier) != 'gratis' ? '' : 'hidden' }}">
                     <label class="block text-gray-700 text-sm font-bold mb-2">Berlaku Hingga</label>
                     <input type="date" name="premium_until"
-                        value="{{ $user->premium_until ? \Carbon\Carbon::parse($user->premium_until)->format('Y-m-d') : '' }}"
+                        value="{{ old('premium_until', $user->premium_until ? \Carbon\Carbon::parse($user->premium_until)->format('Y-m-d') : '') }}"
                         class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-yellow-200 outline-none">
+                    <p class="text-[10px] text-gray-400 mt-1">*Kosongkan jika ingin diset 30 hari otomatis.</p>
                 </div>
             </div>
 
@@ -68,9 +74,15 @@
 
     <script>
         function togglePremiumDate() {
-            const checkbox = document.getElementById('is_premium');
+            const selectBox = document.getElementById('premium_tier');
             const container = document.getElementById('premium_date_container');
-            container.classList.toggle('hidden', !checkbox.checked);
+
+            // Tampilkan tanggal jika pilihan BUKAN 'gratis'
+            if (selectBox.value !== 'gratis') {
+                container.classList.remove('hidden');
+            } else {
+                container.classList.add('hidden');
+            }
         }
     </script>
 @endsection

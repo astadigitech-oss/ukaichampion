@@ -12,6 +12,7 @@ new class extends Component {
 
     public $search = '';
     public $selectedCategory = '';
+    public $selectedTier = ''; // FILTER BARU: Untuk kasta/tipe paket
 
     public function updatingSearch()
     {
@@ -21,36 +22,38 @@ new class extends Component {
     {
         $this->resetPage();
     }
+    public function updatingSelectedTier()
+    {
+        $this->resetPage();
+    }
 
     public function with(): array
     {
-        $user = Auth::user(); // Ambil data user beserta status is_premium-nya
+        $user = Auth::user();
 
         // 1. Siapkan Query Dasar
         $query = ExamPackage::with('examCategory')
             ->withCount('questions')
-            ->has('questions') // Pastikan ada soal
+            ->has('questions')
             ->whereHas('examCategory', function ($q) {
                 $q->whereNull('deleted_at');
             })
+            // FILTER KATEGORI
             ->when($this->selectedCategory, function ($q) {
                 $q->where('exam_category_id', $this->selectedCategory);
             })
+            // FILTER KASTA BARU
+            ->when($this->selectedTier, function ($q) {
+                $q->where('minimum_tier', $this->selectedTier);
+            })
+            // PENCARIAN TEKS
             ->where(function ($q) {
                 $q->where('title', 'like', '%' . $this->search . '%')->orWhereHas('examCategory', function ($subQ) {
                     $subQ->whereNull('deleted_at')->where('name', 'like', '%' . $this->search . '%');
                 });
             });
 
-        // 2. LOGIKA FREEMIUM (TASK 3)
-        // Jika user bukan premium, saring hanya tampilkan yang is_premium = false
-        // if (!$user->is_premium) {
-        //     $query->where('is_premium', false);
-        // }
-
-        // 3. Eksekusi Query
         $packages = $query->latest()->paginate(10);
-
         $packageIds = $packages->pluck('id');
 
         $allUserResults = UserResult::where('user_id', $user->id)->whereIn('exam_package_id', $packageIds)->whereNotNull('finished_at')->latest('finished_at')->get()->groupBy('exam_package_id');
@@ -64,19 +67,28 @@ new class extends Component {
 }; ?>
 
 <div>
-    <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
+    <div class="flex flex-col lg:flex-row justify-between items-start lg:items-center mb-8 gap-4">
         <div>
             <h2 class="text-2xl font-bold text-gray-800">Katalog Ujian</h2>
             <p class="text-gray-500 mt-1">Pilih dan kerjakan paket ujian untuk mengasah kemampuanmu.</p>
         </div>
 
-        <div class="flex flex-col sm:flex-row gap-3 w-full md:w-auto">
+        <div class="flex flex-col sm:flex-row gap-3 w-full lg:w-auto">
             <select wire:model.live="selectedCategory"
-                class="px-4 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-200 outline-none shadow-sm bg-white text-gray-700 font-medium">
+                class="px-4 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-200 outline-none shadow-sm bg-white text-gray-700 font-medium w-full sm:w-auto">
                 <option value="">Semua Kategori</option>
                 @foreach ($categories as $category)
                     <option value="{{ $category->id }}">{{ $category->name }}</option>
                 @endforeach
+            </select>
+
+            <select wire:model.live="selectedTier"
+                class="px-4 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-200 outline-none shadow-sm bg-white text-gray-700 font-medium w-full sm:w-auto">
+                <option value="">Semua Kasta</option>
+                <option value="gratis">🆓 Gratis</option>
+                <option value="plus">✨ Plus</option>
+                <option value="pro">👑 Pro</option>
+                <option value="ultra">🔮 Ultra</option>
             </select>
 
             <div class="relative w-full sm:w-64">
@@ -105,16 +117,22 @@ new class extends Component {
                                 {{ $package->examCategory?->name ?? 'Tanpa Kategori' }}
                             </span>
 
-                            @if ($package->is_premium)
+                            @if ($package->minimum_tier == 'ultra')
                                 <span
-                                    class="bg-red-100 text-red-800 text-[10px] font-bold px-2 py-0.5 rounded-full border border-red-200 uppercase tracking-wider">
-                                    💎 Premium
-                                </span>
+                                    class="bg-purple-100 text-purple-800 text-[10px] font-bold px-2 py-0.5 rounded-full border border-purple-200 uppercase tracking-wider">🔮
+                                    Ultra</span>
+                            @elseif ($package->minimum_tier == 'pro')
+                                <span
+                                    class="bg-yellow-100 text-yellow-800 text-[10px] font-bold px-2 py-0.5 rounded-full border border-yellow-200 uppercase tracking-wider">👑
+                                    Pro</span>
+                            @elseif ($package->minimum_tier == 'plus')
+                                <span
+                                    class="bg-blue-100 text-blue-800 text-[10px] font-bold px-2 py-0.5 rounded-full border border-blue-200 uppercase tracking-wider">✨
+                                    Plus</span>
                             @else
                                 <span
-                                    class="bg-green-100 text-green-800 text-[10px] font-bold px-2 py-0.5 rounded-full border border-green-200 uppercase tracking-wider">
-                                    🆓 Gratis
-                                </span>
+                                    class="bg-gray-100 text-gray-600 text-[10px] font-bold px-2 py-0.5 rounded-full border border-gray-200 uppercase tracking-wider">🆓
+                                    Gratis</span>
                             @endif
 
                             <span class="text-gray-500 text-xs font-bold flex items-center gap-1">
@@ -148,27 +166,25 @@ new class extends Component {
                     </div>
 
                     <div class="w-full md:w-auto flex-shrink-0">
-                        <form action="{{ route('exam.start', $package->id) }}" method="POST" class="m-0 p-0 w-full">
-                            @csrf
+                        @php
+                            $isLocked = !auth()->user()->canAccessTier($package->minimum_tier);
+                        @endphp
 
-                            @php
-                                // Cek apakah paket ini premium TAPI usernya bukan premium
-                                $isLocked = $package->is_premium && !auth()->user()->is_premium;
-                            @endphp
-
-                            @if ($isLocked)
-                                <button type="submit"
-                                    class="w-full md:w-36 text-center bg-gray-100 text-gray-500 hover:bg-red-50 hover:text-red-600 hover:border-red-200 border border-transparent font-bold py-2 px-4 rounded-lg transition-colors shadow-sm text-sm flex justify-center items-center gap-1">
-                                    🔒 Terkunci
-                                </button>
-                            @else
+                        @if ($isLocked)
+                            <button type="button" onclick="showUpgradeModal('{{ $package->minimum_tier }}')"
+                                class="w-full md:w-36 inline-flex justify-center items-center bg-gray-100 text-gray-500 hover:bg-yellow-50 hover:text-yellow-700 hover:border-yellow-300 border border-transparent font-bold py-2 px-4 rounded-lg transition-colors shadow-sm text-sm gap-1 cursor-pointer">
+                                🔒 Terkunci
+                            </button>
+                        @else
+                            <form action="{{ route('exam.start', $package->id) }}" method="POST"
+                                class="m-0 p-0 w-full">
+                                @csrf
                                 <button type="submit"
                                     class="w-full md:w-36 text-center {{ $recentScores->count() > 0 ? 'bg-indigo-50 text-indigo-700 hover:bg-indigo-100 border border-indigo-200' : 'bg-blue-600 text-white hover:bg-blue-700' }} font-bold py-2 px-4 rounded-lg transition-colors shadow-sm text-sm">
                                     {{ $recentScores->count() > 0 ? '🔄 Ulangi' : '🚀 Mulai' }}
                                 </button>
-                            @endif
-
-                        </form>
+                            </form>
+                        @endif
                     </div>
 
                 </div>
@@ -185,4 +201,97 @@ new class extends Component {
     @if ($packages->hasPages())
         <div class="mt-8">{{ $packages->links() }}</div>
     @endif
+
+    <div id="upgradeModal"
+        class="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-60 hidden opacity-0 transition-opacity duration-300">
+        <div class="bg-white rounded-2xl p-8 max-w-sm w-full mx-4 shadow-2xl transform scale-95 transition-transform duration-300 relative"
+            id="upgradeModalContent">
+
+            <button onclick="closeUpgradeModal()"
+                class="absolute top-4 right-4 text-gray-400 hover:text-red-500 text-xl font-bold">&times;</button>
+
+            <div class="text-center">
+                <div id="modalIcon" class="text-6xl mb-4 drop-shadow-md">🔒</div>
+                <h3 class="text-2xl font-black text-gray-900 mb-2">Akses Terkunci</h3>
+
+                <p class="text-gray-500 text-sm mb-6 leading-relaxed">
+                    Paket ujian ini eksklusif. Untuk membukanya, Anda harus memiliki minimal <br>
+                    <span id="modalTierName"
+                        class="font-bold text-lg text-gray-800 mt-2 inline-block px-3 py-1 bg-gray-100 rounded-lg border border-gray-200">Paket</span>
+                </p>
+
+                <div class="bg-blue-50 border border-blue-100 rounded-xl p-4 mb-6">
+                    <p class="text-xs text-blue-600 font-bold uppercase tracking-wider mb-1">Mulai Dari</p>
+                    <p class="text-2xl font-black text-blue-700" id="modalPrice">Rp 0</p>
+                    <p class="text-xs text-blue-500 mt-1">per bulan</p>
+                </div>
+
+                <div class="flex flex-col gap-3">
+                    <a href="{{ route('user.upgrade') }}"
+                        class="w-full bg-yellow-400 hover:bg-yellow-500 text-yellow-900 font-bold py-3 px-4 rounded-xl shadow-md transition-colors text-sm flex justify-center items-center gap-2">
+                        🚀 Lihat Info Pembayaran
+                    </a>
+                    <button onclick="closeUpgradeModal()"
+                        class="w-full bg-gray-100 hover:bg-gray-200 text-gray-600 font-bold py-3 px-4 rounded-xl transition-colors text-sm">
+                        Nanti Saja
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Data Harga untuk masing-masing kasta (Sesuaikan dengan harga di upgrade.blade.php)
+        const tierData = {
+            'plus': {
+                name: '✨ Paket PLUS',
+                price: 'Rp 50.000',
+                icon: '✨'
+            },
+            'pro': {
+                name: '👑 Paket PRO',
+                price: 'Rp 99.000',
+                icon: '👑'
+            },
+            'ultra': {
+                name: '🔮 Paket ULTRA',
+                price: 'Rp 199.000',
+                icon: '🔮'
+            }
+        };
+
+        function showUpgradeModal(tier) {
+            const data = tierData[tier];
+            if (!data) return;
+
+            // Suntikkan data ke dalam HTML Modal
+            document.getElementById('modalTierName').innerText = data.name;
+            document.getElementById('modalPrice').innerText = data.price;
+            document.getElementById('modalIcon').innerText = data.icon;
+
+            // Tampilkan Modal dengan animasi
+            const modal = document.getElementById('upgradeModal');
+            const content = document.getElementById('upgradeModalContent');
+
+            modal.classList.remove('hidden');
+            // Pancing browser untuk nge-render ulang (reflow) agar animasi jalan
+            void modal.offsetWidth;
+            modal.classList.remove('opacity-0');
+            content.classList.remove('scale-95');
+        }
+
+        function closeUpgradeModal() {
+            const modal = document.getElementById('upgradeModal');
+            const content = document.getElementById('upgradeModalContent');
+
+            // Jalankan animasi keluar
+            modal.classList.add('opacity-0');
+            content.classList.add('scale-95');
+
+            // Sembunyikan sepenuhnya setelah animasi selesai (300ms)
+            setTimeout(() => {
+                modal.classList.add('hidden');
+            }, 300);
+        }
+    </script>
 </div>

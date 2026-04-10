@@ -22,24 +22,38 @@ new class extends Component {
     }
 
     // LOGIKA CRITICAL: Approve Pembayaran
+    // LOGIKA CRITICAL: Approve Pembayaran dengan Sistem Kasta
     public function approve($id)
     {
-        $transaction = Transaction::with('user')->findOrFail($id);
+        // 1. Cari transaksi (pakai withTrashed jika transaksi bisa dihapus)
+        $transaction = Transaction::findOrFail($id);
 
         if ($transaction->status === 'pending') {
-            // 1. Update Transaksi menjadi Sukses
+            // 2. DETEKSI KASTA BERDASARKAN NOMINAL PEMBAYARAN
+            // Kita deteksi tier DULU sebelum update status transaksi
+            $tier = 'plus';
+            if ($transaction->amount >= 99000 && $transaction->amount < 199000) {
+                $tier = 'pro';
+            } elseif ($transaction->amount >= 199000) {
+                $tier = 'ultra';
+            }
+
+            // 3. Update Transaksi menjadi Sukses
             $transaction->update([
                 'status' => 'success',
                 'paid_at' => now(),
             ]);
 
-            // 2. Update Akun User menjadi Premium selama 1 Tahun
-            $transaction->user->update([
+            // 4. UPDATE USER SECARA LANGSUNG (ANTI-MAMPET)
+            // Menggunakan Eloquent Query Builder untuk memastikan data masuk ke DB saat itu juga
+            \App\Models\User::where('id', $transaction->user_id)->update([
                 'is_premium' => true,
-                'premium_until' => now()->addYear(),
+                'premium_tier' => $tier,
+                'premium_until' => now()->addDays(30),
             ]);
 
-            session()->flash('success', 'Transaksi #' . str_pad($transaction->id, 5, '0', STR_PAD_LEFT) . ' disetujui! Akun ' . $transaction->user->name . ' kini Premium.');
+            // 5. Pesan Sukses
+            session()->flash('success', 'Transaksi #' . str_pad($transaction->id, 5, '0', STR_PAD_LEFT) . ' BERHASIL! User kini kasta ' . strtoupper($tier));
         }
     }
 

@@ -38,11 +38,14 @@
                         </ul>
                     </div>
                     <div class="p-6 pt-0 mt-auto">
-                        <a href="https://wa.me/{{ env('CBT_ADMIN_WA', '628000000') }}?text=Halo%20Admin,%20saya%20ingin%20konfirmasi%20pembayaran%20Premium%20CBT.%0A%0ANama%20Akun:%20{{ auth()->user()->name }}%0AEmail:%20{{ auth()->user()->email }}%0APaket%20Pilihan:%20PLUS%0ATotal%20Transfer:%20Rp%2050.000%0A%0ABerikut%20saya%20lampirkan%20bukti%20transfernya."
-                            target="_blank"
-                            class="block w-full py-3 px-4 text-center rounded-xl font-bold transition-colors bg-blue-50 text-blue-700 hover:bg-blue-600 hover:text-white border border-blue-200 hover:border-transparent">
-                            Pilih Paket Plus
-                        </a>
+                        <form action="{{ route('user.checkout') }}" method="POST" class="p-6 pt-0 mt-auto m-0">
+                            @csrf
+                            <input type="hidden" name="tier" value="plus">
+                            <button type="submit"
+                                class="block w-full py-3 px-4 text-center rounded-xl font-bold transition-colors bg-blue-50 text-blue-700 hover:bg-blue-600 hover:text-white border border-blue-200 hover:border-transparent">
+                                Pilih Paket Plus
+                            </button>
+                        </form>
                     </div>
                 </div>
 
@@ -67,15 +70,19 @@
                             <li class="flex items-start gap-2"><span class="text-yellow-500">✓</span> Analisis Grafik Nilai
                             </li>
                             <li class="flex items-start gap-2 text-gray-400"><span class="text-gray-300">✗</span>
-                                <del>Simulasi Nasional</del></li>
+                                <del>Simulasi Nasional</del>
+                            </li>
                         </ul>
                     </div>
                     <div class="p-6 pt-0 mt-auto">
-                        <a href="https://wa.me/{{ env('CBT_ADMIN_WA', '628000000') }}?text=Halo%20Admin,%20saya%20ingin%20konfirmasi%20pembayaran%20Premium%20CBT.%0A%0ANama%20Akun:%20{{ auth()->user()->name }}%0AEmail:%20{{ auth()->user()->email }}%0APaket%20Pilihan:%20PRO%0ATotal%20Transfer:%20Rp%2099.000%0A%0ABerikut%20saya%20lampirkan%20bukti%20transfernya."
-                            target="_blank"
-                            class="block w-full py-3 px-4 text-center rounded-xl font-bold transition-colors bg-yellow-50 text-yellow-800 hover:bg-yellow-400 hover:text-yellow-900 border border-yellow-300 hover:border-transparent">
-                            Pilih Paket Pro
-                        </a>
+                        <form action="{{ route('user.checkout') }}" method="POST" class="p-6 pt-0 mt-auto m-0">
+                            @csrf
+                            <input type="hidden" name="tier" value="pro">
+                            <button type="submit"
+                                class="block w-full py-3 px-4 text-center rounded-xl font-bold transition-colors bg-yellow-50 text-yellow-800 hover:bg-yellow-400 hover:text-yellow-900 border border-yellow-300 hover:border-transparent">
+                                Pilih Paket Pro
+                            </button>
+                        </form>
                     </div>
                 </div>
 
@@ -104,11 +111,14 @@
                         </ul>
                     </div>
                     <div class="p-6 pt-0 mt-auto">
-                        <a href="https://wa.me/{{ env('CBT_ADMIN_WA', '628000000') }}?text=Halo%20Admin,%20saya%20ingin%20konfirmasi%20pembayaran%20Premium%20CBT.%0A%0ANama%20Akun:%20{{ auth()->user()->name }}%0AEmail:%20{{ auth()->user()->email }}%0APaket%20Pilihan:%20ULTRA%0ATotal%20Transfer:%20Rp%20199.000%0A%0ABerikut%20saya%20lampirkan%20bukti%20transfernya."
-                            target="_blank"
-                            class="block w-full py-3 px-4 text-center rounded-xl font-bold transition-colors bg-purple-600 text-white hover:bg-purple-500 border border-purple-500 hover:border-transparent">
-                            Pilih Paket Ultra
-                        </a>
+                        <form action="{{ route('user.checkout') }}" method="POST" class="p-6 pt-0 mt-auto m-0">
+                            @csrf
+                            <input type="hidden" name="tier" value="ultra">
+                            <button type="submit"
+                                class="block w-full py-3 px-4 text-center rounded-xl font-bold transition-colors bg-purple-600 text-white hover:bg-purple-500 border border-purple-500 hover:border-transparent">
+                                Pilih Paket Ultra
+                            </button>
+                        </form>
                     </div>
                 </div>
 

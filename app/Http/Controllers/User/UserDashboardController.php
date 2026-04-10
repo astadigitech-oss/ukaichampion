@@ -5,6 +5,7 @@ namespace App\Http\Controllers\User;
 use App\Http\Controllers\Controller;
 use App\Models\ExamPackage;
 use App\Models\UserResult;
+use App\Models\Transaction; // TAMBAHAN PENTING UNTUK INVOICE
 use Illuminate\Http\Request;
 
 class UserDashboardController extends Controller
@@ -94,5 +95,63 @@ class UserDashboardController extends Controller
     public function upgrade()
     {
         return view('user.upgrade');
+    }
+
+    // =========================================================
+    // FITUR BARU: CHECKOUT & INVOICE
+    // =========================================================
+
+    // PROSES PEMBUATAN TRANSAKSI
+    // =========================================================
+    // FITUR BARU: CHECKOUT & INVOICE
+    // =========================================================
+
+    // PROSES PEMBUATAN TRANSAKSI
+    public function checkout(Request $request)
+    {
+        // PENGAMAN: Jika tiba-tiba sesi login habis
+        if (!$request->user()) {
+            return redirect()->route('login');
+        }
+
+        $request->validate([
+            'tier' => 'required|in:plus,pro,ultra'
+        ]);
+
+        // Tentukan harga berdasarkan kasta
+        $prices = [
+            'plus' => 50000,
+            'pro' => 99000,
+            'ultra' => 199000
+        ];
+
+        // Buat record transaksi di database dengan status pending
+        $transaction = Transaction::create([
+            'user_id' => $request->user()->id, // MENGGUNAKAN $request AGAR AMAN
+            'amount' => $prices[$request->tier],
+            'status' => 'pending',
+        ]);
+
+        // Lempar user ke halaman tagihan
+        return redirect()->route('user.invoice', $transaction->id)->with('success', 'Pesanan berhasil dibuat! Selesaikan pembayaran Anda.');
+    }
+
+    // TAMPILKAN HALAMAN TAGIHAN
+    public function invoice(Request $request, $id) // WAJIB TAMBAHKAN 'Request $request' DI SINI
+    {
+        // PENGAMAN: Jika tiba-tiba sesi login habis
+        if (!$request->user()) {
+            return redirect()->route('login');
+        }
+
+        // Cari transaksi milik user ini (menggunakan $request)
+        $transaction = Transaction::where('user_id', $request->user()->id)->findOrFail($id);
+
+        // Tentukan nama paket berdasarkan harga (untuk tampilan di invoice)
+        $tierName = 'Paket PLUS';
+        if ($transaction->amount == 99000) $tierName = 'Paket PRO';
+        if ($transaction->amount == 199000) $tierName = 'Paket ULTRA';
+
+        return view('user.invoice', compact('transaction', 'tierName'));
     }
 }

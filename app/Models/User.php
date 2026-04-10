@@ -19,6 +19,7 @@ class User extends Authenticatable
         'profile_picture',
         'is_premium',
         'premium_until',
+        'premium_tier',
     ];
 
     protected $hidden = [
