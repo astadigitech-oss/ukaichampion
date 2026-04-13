@@ -109,7 +109,6 @@ new class extends Component {
         /* Batasan gambar soal WYSIWYG agar tidak kebesaran di awal */
         .question-content img {
             max-height: 550px !important;
-            /* DIBESARKAN JADI 550px */
             width: auto !important;
             object-fit: contain;
             border-radius: 0.5rem;
@@ -157,8 +156,8 @@ new class extends Component {
             @php $currentQ = $questions[$currentQuestionIndex]; @endphp
 
             <div class="flex flex-col md:flex-row gap-6 relative z-10">
-                <div
-                    class="w-full md:w-3/4 bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden relative">
+                <div id="top-of-question"
+                    class="w-full md:w-3/4 bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden relative scroll-mt-24">
 
                     <div class="bg-blue-50 p-4 border-b flex justify-between items-center">
                         <div class="flex items-center gap-4">
@@ -219,14 +218,14 @@ new class extends Component {
                     </div>
 
                     <div class="bg-white p-4 border-t flex justify-between items-center">
-                        <button wire:click="prevQuestion"
+                        <button wire:click="prevQuestion" onclick="scrollToTopQuestion()"
                             class="px-6 py-2 bg-white border border-gray-300 hover:bg-gray-100 text-gray-700 font-bold rounded-lg transition-colors {{ $currentQuestionIndex == 0 ? 'invisible' : '' }}">
                             ⬅️ Sebelumnya
                         </button>
 
                         <div class="flex items-center gap-2">
                             @if ($currentQuestionIndex < count($questions) - 1)
-                                <button wire:click="nextQuestion"
+                                <button wire:click="nextQuestion" onclick="scrollToTopQuestion()"
                                     class="px-6 py-2 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-lg shadow-sm transition-colors">
                                     Selanjutnya ➡️
                                 </button>
@@ -246,18 +245,33 @@ new class extends Component {
                 </div>
 
                 <div class="w-full md:w-1/4">
-                    <div class="bg-white p-6 rounded-xl shadow-sm border sticky top-6">
-                        <h4 class="font-bold text-gray-800 mb-4 text-center border-b pb-2">Navigasi Soal</h4>
-                        <div class="grid grid-cols-5 gap-2">
-                            @foreach ($questions as $index => $q)
-                                <button wire:click="jumpToQuestion({{ $index }})"
-                                    class="w-full aspect-square flex items-center justify-center font-bold text-sm border rounded-lg transition-all 
-                                    {{ isset($answers[$q->id]) ? 'bg-blue-500 border-blue-600 text-white shadow-sm' : 'bg-white border-gray-300 text-gray-600 hover:bg-gray-50' }} 
-                                    {{ $index === $currentQuestionIndex ? 'ring-2 ring-blue-800 ring-offset-2' : '' }}">
-                                    {{ $index + 1 }}
-                                </button>
-                            @endforeach
+                    <div class="bg-white p-4 md:p-6 rounded-xl shadow-sm border sticky top-6">
+                        <div class="flex items-center justify-between border-b pb-3 mb-4">
+                            <h4 class="font-bold text-gray-800 text-sm">Navigasi Soal</h4>
+                            <span
+                                class="text-xs font-bold text-gray-400 bg-gray-100 px-2 py-1 rounded-full">{{ count($questions) }}
+                                Butir</span>
                         </div>
+
+                        <div class="max-h-[60vh] overflow-y-auto overflow-x-hidden scrollbar-thin">
+                            <div class="flex flex-wrap gap-2 justify-start p-2">
+                                @foreach ($questions as $index => $q)
+                                    <button wire:click="jumpToQuestion({{ $index }})"
+                                        onclick="scrollToTopQuestion()"
+                                        class="w-9 h-9 flex items-center justify-center font-bold text-xs border rounded-lg transition-all relative
+                                        {{ isset($answers[$q->id]) ? 'bg-blue-500 border-blue-600 text-white shadow-sm' : 'bg-white border-gray-300 text-gray-600 hover:bg-gray-50' }} 
+                                        {{ $index === $currentQuestionIndex ? 'ring-2 ring-blue-800 ring-offset-2 scale-110 z-10' : '' }}">
+                                        {{ $index + 1 }}
+                                    </button>
+                                @endforeach
+                            </div>
+                        </div>
+
+                        @if (count($questions) > 30)
+                            <div class="text-[10px] text-center text-gray-400 mt-3 font-medium">
+                                Scroll ke bawah untuk melihat nomor lain
+                            </div>
+                        @endif
                     </div>
                 </div>
             </div>
@@ -315,19 +329,31 @@ new class extends Component {
                 modalImg.src = '';
             }
 
-            // Gunakan Event Delegation untuk menangkap klik pada gambar soal yang digenerate oleh Livewire/WYSIWYG
             document.addEventListener('click', function(e) {
                 if (e.target.tagName === 'IMG' && e.target.closest('.question-content')) {
                     openLightbox(e.target.src);
                 }
             });
 
-            // Tutup modal dengan tombol ESC
             document.addEventListener('keydown', function(e) {
                 if (e.key === 'Escape' && !modal.classList.contains('hidden')) {
                     closeLightbox();
                 }
             });
+
+            // --- JAVASCRIPT UNTUK AUTO-SCROLL KE SOAL ---
+            function scrollToTopQuestion() {
+                // Jeda 100ms agar Livewire selesai me-render soal baru sebelum kita scroll
+                setTimeout(() => {
+                    const el = document.getElementById('top-of-question');
+                    if (el) {
+                        el.scrollIntoView({
+                            behavior: 'smooth',
+                            block: 'start'
+                        });
+                    }
+                }, 100);
+            }
         </script>
     </div>
 </div>
