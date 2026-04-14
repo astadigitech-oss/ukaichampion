@@ -88,6 +88,9 @@
                         'Akun: ' .
                         auth()->user()->name .
                         "\n" .
+                        'Email: ' .
+                        auth()->user()->email .
+                        "\n" .
                         'Paket: ' .
                         $tierName .
                         "\n" .
