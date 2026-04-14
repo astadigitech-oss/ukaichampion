@@ -5,6 +5,7 @@ use App\Http\Controllers\Auth\AuthController;
 use App\Http\Controllers\User\UserDashboardController;
 use App\Http\Controllers\Admin\AdminDashboardController;
 use App\Http\Controllers\User\ContactController;
+use Livewire\Volt\Volt;
 // Pastikan ini ada di bagian paling atas file web.php
 
 
@@ -66,7 +67,11 @@ Route::middleware('auth:admin')->group(function () {
     Route::resource('/admin/users', App\Http\Controllers\Admin\UserController::class)->names('admin.users');
 
     Route::get('/admin/profile', [AdminDashboardController::class, 'profile'])->name('admin.profile');
+    // Route Transactions (Ini sudah benar formatnya)
     Route::get('/admin/transactions', [\App\Http\Controllers\Admin\AdminDashboardController::class, 'transactions'])->name('admin.transactions');
+
+    // Route Leaderboard (Sekarang sudah pakai Controller!)
+    Route::get('/admin/leaderboard', [\App\Http\Controllers\Admin\AdminDashboardController::class, 'leaderboard'])->name('admin.leaderboard');
 });
 
 // ==========================================

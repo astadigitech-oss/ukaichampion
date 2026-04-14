@@ -44,4 +44,10 @@ class AdminDashboardController extends Controller
     {
         return view('admin.transactions');
     }
+
+    // Fungsi untuk memanggil halaman Papan Nilai Livewire
+    public function leaderboard()
+    {
+        return view('admin.leaderboard-page');
+    }
 }
