@@ -43,7 +43,7 @@
                 </div>
                 <h3 class="font-bold text-gray-800 text-lg">Instagram</h3>
                 <p class="text-pink-600 font-bold mt-2 text-sm">{{ env('CBT_ADMIN_IG') }}</p>
-                <p class="text-[10px] text-gray-400 mt-1 uppercase tracking-widest font-bold">Follow Kami</p>
+                <p class="text-[10px] text-gray-400 mt-1 uppercase tracking-widest font-bold"></p>
             </a>
 
             <a href="https://tiktok.com/@{{ env('CBT_ADMIN_TIKTOK') }}" target="_blank"
@@ -57,7 +57,7 @@
                 </div>
                 <h3 class="font-bold text-gray-800 text-lg">TikTok</h3>
                 <p class="text-gray-900 font-bold mt-2 text-sm">{{ env('CBT_ADMIN_TIKTOK') }}</p>
-                <p class="text-[10px] text-gray-400 mt-1 uppercase tracking-widest font-bold">Video Edukasi</p>
+                <p class="text-[10px] text-gray-400 mt-1 uppercase tracking-widest font-bold"></p>
             </a>
 
             <a href="mailto:{{ env('CBT_ADMIN_EMAIL') }}"

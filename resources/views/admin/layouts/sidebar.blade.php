@@ -50,14 +50,16 @@
                     📦 Paket Ujian
                 </a>
 
-                <a href="{{ route('admin.users.index') }}"
-                    class="block py-2.5 px-4 rounded transition duration-200 mb-2 {{ request()->routeIs('admin.users.*') ? 'bg-gray-800 border-l-4 border-red-500 font-bold' : 'hover:bg-gray-700' }}">
-                    👥 Manajemen User
-                </a>
+
 
                 <a href="{{ route('admin.leaderboard') }}"
                     class="block py-2.5 px-4 rounded transition duration-200 mb-2 {{ request()->routeIs('admin.leaderboard') ? 'bg-gray-800 border-l-4 border-red-500 font-bold' : 'hover:bg-gray-700 text-gray-300' }}">
                     🏆 Papan Nilai
+                </a>
+
+                <a href="{{ route('admin.users.index') }}"
+                    class="block py-2.5 px-4 rounded transition duration-200 mb-2 {{ request()->routeIs('admin.users.*') ? 'bg-gray-800 border-l-4 border-red-500 font-bold' : 'hover:bg-gray-700' }}">
+                    👥 Manajemen User
                 </a>
 
                 <a href="{{ route('admin.transactions') }}"

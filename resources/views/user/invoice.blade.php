@@ -59,22 +59,16 @@
                     <h3 class="text-sm font-bold text-gray-800 mb-3 flex items-center gap-2 border-b pb-2">💳 Transfer ke
                         Rekening Berikut:</h3>
 
-                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    {{-- Diubah menjadi 1 kolom saja agar lebih lega --}}
+                    <div class="grid grid-cols-1 gap-3">
                         <div
-                            class="border border-gray-200 rounded-lg p-3 flex justify-between items-center bg-white shadow-sm hover:border-blue-300 transition-colors">
+                            class="border border-gray-200 rounded-lg p-4 flex justify-between items-center bg-white shadow-sm hover:border-blue-300 transition-colors">
                             <div>
-                                <p class="text-[10px] text-gray-500 uppercase font-bold">Bank BCA</p>
-                                <p class="font-mono font-bold text-base text-gray-800 tracking-wide">1234567890</p>
+                                <p class="text-[10px] text-gray-500 uppercase font-bold">Seabank</p>
+                                <p class="font-mono font-bold text-lg text-gray-800 tracking-wide">9018-3663-4869</p>
                             </div>
-                            <span class="text-[9px] font-bold bg-gray-100 px-2 py-1 rounded text-gray-500">A.N ADMIN</span>
-                        </div>
-                        <div
-                            class="border border-gray-200 rounded-lg p-3 flex justify-between items-center bg-white shadow-sm hover:border-blue-300 transition-colors">
-                            <div>
-                                <p class="text-[10px] text-gray-500 uppercase font-bold">Bank Mandiri</p>
-                                <p class="font-mono font-bold text-base text-gray-800 tracking-wide">0987654321</p>
-                            </div>
-                            <span class="text-[9px] font-bold bg-gray-100 px-2 py-1 rounded text-gray-500">A.N ADMIN</span>
+                            <span class="text-[10px] font-bold bg-gray-100 px-3 py-1.5 rounded text-gray-500">A.N
+                                ADMIN</span>
                         </div>
                     </div>
                 </div>
@@ -105,7 +99,7 @@
                     </p>
 
                     <div class="flex flex-col sm:flex-row items-center justify-center gap-3 w-full sm:w-auto">
-                        <a href="https://wa.me/{{ env('CBT_ADMIN_WA', '628000000') }}?text={{ urlencode($waText) }}"
+                        <a href="https://wa.me/{{ env('CBT_ADMIN_WA', '6282329363662') }}?text={{ urlencode($waText) }}"
                             target="_blank"
                             class="w-full sm:w-auto bg-green-500 hover:bg-green-600 text-white font-bold py-2.5 px-6 rounded-lg shadow-sm transition-colors text-sm flex items-center justify-center gap-2">
                             <span>💬</span> Kirim Bukti via WA
