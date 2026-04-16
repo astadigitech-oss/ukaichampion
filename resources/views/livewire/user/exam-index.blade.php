@@ -12,7 +12,8 @@ new class extends Component {
 
     public $search = '';
     public $selectedCategory = '';
-    public $selectedTier = ''; // FILTER BARU: Untuk Paket/tipe paket
+    public $selectedTier = '';
+    public $selectedStatus = ''; // 1. FILTER BARU: Status Pengerjaan
 
     public function updatingSearch()
     {
@@ -26,12 +27,16 @@ new class extends Component {
     {
         $this->resetPage();
     }
+    public function updatingSelectedStatus()
+    {
+        $this->resetPage();
+    } // 2. Reset halaman saat filter status diubah
 
     public function with(): array
     {
         $user = Auth::user();
 
-        // 1. Siapkan Query Dasar
+        // 3. Siapkan Query Dasar
         $query = ExamPackage::with('examCategory')
             ->withCount('questions')
             ->has('questions')
@@ -42,9 +47,23 @@ new class extends Component {
             ->when($this->selectedCategory, function ($q) {
                 $q->where('exam_category_id', $this->selectedCategory);
             })
-            // FILTER Paket BARU
+            // FILTER PAKET/TIER
             ->when($this->selectedTier, function ($q) {
                 $q->where('minimum_tier', $this->selectedTier);
+            })
+            // 4. FILTER STATUS PENGERJAAN BARU
+            ->when($this->selectedStatus, function ($q) use ($user) {
+                if ($this->selectedStatus === 'finished') {
+                    // Hanya tampilkan paket yang ID-nya ADA di tabel nilai milik user ini
+                    $q->whereIn('id', function ($subQuery) use ($user) {
+                        $subQuery->select('exam_package_id')->from('user_results')->where('user_id', $user->id)->whereNotNull('finished_at');
+                    });
+                } elseif ($this->selectedStatus === 'unfinished') {
+                    // Hanya tampilkan paket yang ID-nya TIDAK ADA di tabel nilai milik user ini
+                    $q->whereNotIn('id', function ($subQuery) use ($user) {
+                        $subQuery->select('exam_package_id')->from('user_results')->where('user_id', $user->id)->whereNotNull('finished_at');
+                    });
+                }
             })
             // PENCARIAN TEKS
             ->where(function ($q) {
@@ -69,7 +88,7 @@ new class extends Component {
 <div>
     <div class="flex flex-col lg:flex-row justify-between items-start lg:items-center mb-8 gap-4">
         <div>
-            <h2 class="text-2xl font-bold text-gray-800">Katalog Ujian</h2>
+            <h2 class="text-2xl font-bold text-gray-800">Paket Tryout</h2>
             <p class="text-gray-500 mt-1">Pilih dan kerjakan paket ujian untuk mengasah kemampuanmu.</p>
         </div>
 
@@ -89,6 +108,13 @@ new class extends Component {
                 <option value="plus">✨ Plus</option>
                 <option value="pro">👑 Pro</option>
                 <option value="ultra">🔮 Ultra</option>
+            </select>
+
+            <select wire:model.live="selectedStatus"
+                class="px-4 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-200 outline-none shadow-sm bg-white text-gray-700 font-medium w-full sm:w-auto">
+                <option value="">Semua Status</option>
+                <option value="unfinished">⏳ Belum Dikerjakan</option>
+                <option value="finished">✅ Sudah Selesai</option>
             </select>
 
             <div class="relative w-full sm:w-64">
@@ -169,28 +195,28 @@ new class extends Component {
                         @php
                             $isLocked = !auth()->user()->canAccessTier($package->minimum_tier);
                             $hasFinished = $recentScores->count() > 0;
-
-                            // Logika baru: Jika paket gratis dan sudah ada nilai, maka limit tercapai
-                            $isFreeLimitReached = $package->minimum_tier == 'gratis' && $hasFinished;
                         @endphp
 
-                        @if ($isLocked)
-                            <button type="button" onclick="showUpgradeModal('{{ $package->minimum_tier }}')"
-                                class="w-full md:w-36 inline-flex justify-center items-center bg-gray-100 text-gray-500 hover:bg-yellow-50 hover:text-yellow-700 hover:border-yellow-300 border border-transparent font-bold py-2 px-4 rounded-lg transition-colors shadow-sm text-sm gap-1 cursor-pointer">
-                                🔒 Terkunci
-                            </button>
-                        @elseif ($isFreeLimitReached)
+                        @if ($hasFinished)
+                            {{-- PRIORITAS 1: Kalau sudah pernah selesai, langsung gembok permanen --}}
                             <button type="button" disabled
                                 class="w-full md:w-36 inline-flex justify-center items-center bg-gray-200 text-gray-500 border border-transparent font-bold py-2 px-4 rounded-lg cursor-not-allowed shadow-sm text-sm gap-1">
                                 ✅ Selesai
                             </button>
+                        @elseif ($isLocked)
+                            {{-- PRIORITAS 2: Kalau belum selesai, tapi kastanya tidak cukup --}}
+                            <button type="button" onclick="showUpgradeModal('{{ $package->minimum_tier }}')"
+                                class="w-full md:w-36 inline-flex justify-center items-center bg-gray-100 text-gray-500 hover:bg-yellow-50 hover:text-yellow-700 hover:border-yellow-300 border border-transparent font-bold py-2 px-4 rounded-lg transition-colors shadow-sm text-sm gap-1 cursor-pointer">
+                                🔒 Terkunci
+                            </button>
                         @else
+                            {{-- PRIORITAS 3: Belum selesai dan kastanya cukup --}}
                             <form action="{{ route('exam.start', $package->id) }}" method="POST"
                                 class="m-0 p-0 w-full">
                                 @csrf
                                 <button type="submit"
-                                    class="w-full md:w-36 text-center {{ $hasFinished ? 'bg-indigo-50 text-indigo-700 hover:bg-indigo-100 border border-indigo-200' : 'bg-blue-600 text-white hover:bg-blue-700' }} font-bold py-2 px-4 rounded-lg transition-colors shadow-sm text-sm">
-                                    {{ $hasFinished ? '🔄 Ulangi' : '🚀 Mulai' }}
+                                    class="w-full md:w-36 text-center bg-blue-600 text-white hover:bg-blue-700 font-bold py-2 px-4 rounded-lg transition-colors shadow-sm text-sm">
+                                    🚀 Mulai
                                 </button>
                             </form>
                         @endif

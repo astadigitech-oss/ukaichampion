@@ -9,7 +9,6 @@ use Illuminate\Support\Facades\Auth;
 
 class ExamController extends Controller
 {
-
     // Fungsi saat tombol "Mulai Kerjakan" ditekan
     public function startExam($package_id)
     {
@@ -24,41 +23,47 @@ class ExamController extends Controller
                 ->with('error', 'Paket ujian ini belum memiliki soal.');
         }
 
-        // 3. CEK AKSES PREMIUM
+        // 3. CEK AKSES PREMIUM / KASTA
+        // (Paket bawah tidak bisa akses paket atas)
         if ($package->is_premium && !$user->is_premium) {
             return redirect()->route('user.exams')
-                ->with('error', 'Akses ditolak! Anda harus Upgrade ke Premium untuk membuka ujian ini.');
+                ->with('error', 'Akses ditolak! Anda harus Upgrade paket akun Anda untuk membuka ujian ini.');
         }
 
-        // --- MULAI PERUBAHAN SATPAM PINTU BELAKANG ---
-
-        // 4. CEK ATTEMPT & LIMIT GRATIS
-        // Kita cek apakah user sudah pernah menyelesaikan paket ini sebelumnya
-        $lastAttempt = UserResult::where('user_id', $user->id)
+        // 4. CEK UJIAN YANG MENGGANTUNG (MENCEGAH SPAM KLIK)
+        $activeExam = UserResult::where('user_id', $user->id)
             ->where('exam_package_id', $package_id)
-            ->whereNotNull('finished_at') // Kita hitung yang sudah selesai saja
-            ->max('attempt_number');
+            ->whereNull('finished_at') // Cari yang sedang dikerjakan
+            ->first();
 
-        // JIKA PAKET GRATIS DAN SUDAH PERNAH MENGERJAKAN (Attempt >= 1)
-        if ($package->minimum_tier == 'gratis' && $lastAttempt >= 1) {
-            return redirect()->route('user.exams')
-                ->with('error', 'Maaf, paket gratis hanya bisa dikerjakan 1 kali. Silakan upgrade ke Premium untuk pengerjaan tanpa batas!');
+        if ($activeExam) {
+            // Jika ada ujian yang belum disubmit, kembalikan dia ke halaman ujian itu
+            return redirect()->route('exam.play', $activeExam->id);
         }
 
-        // --- SELESAI PERUBAHAN ---
+        // 5. CEK BATAS PENGERJAAN (HANYA BOLEH 1 KALI)
+        // Kita cek apakah user sudah PUNYA nilai (sudah selesai) di paket ini
+        $hasFinished = UserResult::where('user_id', $user->id)
+            ->where('exam_package_id', $package_id)
+            ->whereNotNull('finished_at') // Cari yang statusnya sudah selesai
+            ->exists();
 
-        $currentAttempt = $lastAttempt ? $lastAttempt + 1 : 1;
+        // Jika sudah pernah selesai, tolak siapapun itu (baik gratis maupun premium)
+        if ($hasFinished) {
+            return redirect()->route('user.exams')
+                ->with('error', 'Maaf, Anda sudah pernah mengerjakan ujian ini. Setiap paket ujian hanya dapat dikerjakan 1 kali.');
+        }
 
-        // 5. BUAT KERTAS UJIAN
+        // 6. BUAT KERTAS UJIAN BARU
         $result = UserResult::create([
             'user_id'         => $user->id,
             'exam_package_id' => $package_id,
-            'attempt_number'  => $currentAttempt,
+            'attempt_number'  => 1, // Pasti selalu 1, karena tidak ada percobaan kedua
             'score'           => 0,
             'finished_at'     => null,
         ]);
 
-        // 6. Arahkan ke Halaman Livewire Ujian
+        // 7. Arahkan ke Halaman Livewire Ujian
         return redirect()->route('exam.play', $result->id);
     }
 
