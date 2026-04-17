@@ -125,14 +125,36 @@ new class extends Component {
                             {{-- TAMBAHAN: Kolom Menghitung Durasi --}}
                             <td class="px-6 py-4 text-center text-sm font-bold text-gray-600">
                                 @php
-                                    // Menggunakan objek DateInterval bawaan PHP yang jauh lebih akurat
-                                    $diff = $res->created_at->diff($res->finished_at);
+                                    $waktuMulai = $res->created_at;
+                                    $waktuSelesai = $res->finished_at;
 
-                                    // Jika durasi mencapai 1 jam atau lebih, tampilkan 'j' (Jam)
-                                    $hours = $diff->h > 0 ? $diff->h . 'j ' : '';
+                                    // Inisialisasi variabel agar tidak undefined
+                                    $hours = '';
+                                    $menitTampil = 0;
+                                    $detik = 0;
+
+                                    if ($res->examPackage) {
+                                        $limitDetik = $res->examPackage->time_limit * 60;
+                                        $totalDetik = $waktuMulai->diffInSeconds($waktuSelesai);
+
+                                        if ($totalDetik > $limitDetik) {
+                                            // Skenario DATA BENGKAK: Paksa ke limit paket
+                                            $totalDetik = $limitDetik;
+                                        }
+
+                                        // Hitung jam, menit, detik dari totalDetik yang sudah "aman"
+                                        $h = floor($totalDetik / 3600);
+                                        $m = floor(($totalDetik % 3600) / 60);
+                                        $s = $totalDetik % 60;
+
+                                        $hours = $h > 0 ? $h . 'j ' : '';
+                                        $menitTampil = $m;
+                                        $detik = $s;
+                                    }
                                 @endphp
+
                                 <span class="bg-gray-100 px-2 py-1 rounded border border-gray-200 whitespace-nowrap">
-                                    ⏱️ {{ $hours }}{{ $diff->i }}m {{ $diff->s }}s
+                                    ⏱️ {{ $hours }}{{ $menitTampil }}m {{ $detik }}s
                                 </span>
                             </td>
                             <td class="px-6 py-4 text-right text-xs text-gray-500">

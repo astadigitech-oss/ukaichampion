@@ -412,12 +412,12 @@ new class extends Component {
             const RESULT_ID = {{ $result_id }};
 
             function simpanJawabanKeServer(questionId, jawaban) {
-                // Tembak data ke API tanpa memuat ulang halaman
+                // Tembak data ke API tanpa memuat ulang halaman (ke Redis)
                 fetch('{{ route('api.exam.save') }}', {
                         method: 'POST',
                         headers: {
                             'Content-Type': 'application/json',
-                            'X-CSRF-TOKEN': '{{ csrf_token() }}' // Penting untuk keamanan Laravel
+                            'X-CSRF-TOKEN': '{{ csrf_token() }}'
                         },
                         body: JSON.stringify({
                             result_id: RESULT_ID,
@@ -429,8 +429,11 @@ new class extends Component {
                     .then(data => {
                         if (data.status === 'success') {
                             console.log('Jawaban ' + jawaban + ' tersimpan di Redis!');
-                            // Di sini kamu bisa tambahkan kodingan JS untuk mengubah warna tombol
-                            // agar siswa tahu jawabannya sudah dipilih.
+
+                            // --- INI KUNCINYA ---
+                            // Memberitahu Livewire bahwa jawaban sudah berubah 
+                            // agar navigasi di samping otomatis berubah warna jadi biru
+                            @this.set('answers.' + questionId, jawaban);
                         }
                     })
                     .catch(error => {
