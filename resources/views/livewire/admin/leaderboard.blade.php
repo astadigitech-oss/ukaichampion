@@ -46,7 +46,7 @@ new class extends Component {
         ];
 
         return [
-            'results' => $query->orderBy('score', 'desc')->paginate(15),
+            'results' => $query->orderBy('score', 'desc')->orderByRaw('TIMESTAMPDIFF(SECOND, created_at, finished_at) ASC')->paginate(15),
             'packages' => ExamPackage::all(),
             'stats' => $stats,
         ];
@@ -114,7 +114,7 @@ new class extends Component {
                             <td class="px-6 py-4">
                                 <span
                                     class="px-2 py-1 bg-blue-50 text-blue-700 rounded text-[10px] font-bold uppercase border border-blue-100">
-                                    {{ $res->examPackage->title }}
+                                    {{ $res->examPackage ? $res->examPackage->title : 'PAKET TERHAPUS' }}
                                 </span>
                             </td>
                             <td

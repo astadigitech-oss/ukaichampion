@@ -56,7 +56,7 @@ Route::middleware('auth:web')->group(function () {
     // Rute untuk menampilkan halaman tagihan
     Route::get('/invoice/{id}', [UserDashboardController::class, 'invoice'])->name('user.invoice');
     Route::post('/invoice/{id}/cancel', [UserDashboardController::class, 'cancelInvoice'])->name('user.invoice.cancel');
-
+    Route::post('/api/exam/save-answer', [\App\Http\Controllers\Api\ExamApiController::class, 'saveAnswer'])->name('api.exam.save');
     // RUTE KHUSUS LOAD TESTING k6 (HAPUS JIKA APLIKASI SUDAH RILIS ONLINE)
     // Route::get('/k6-test-ujian', function () {
     //     // 1. BEBAN BACA: Memaksa database mencari dan mengacak 50 soal

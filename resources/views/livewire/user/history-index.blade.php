@@ -203,13 +203,15 @@ new class extends Component {
                                     $waktuMulai = \Carbon\Carbon::parse($history->created_at);
                                     $waktuSelesai = \Carbon\Carbon::parse($history->finished_at);
 
-                                    // Cari total detiknya dulu biar presisi
+                                    // AMANKAN DURASI: Jika selesai - mulai lebih besar dari limit paket, paksa ke limit paket
+                                    $limitDetik = $history->examPackage->time_limit * 60;
                                     $totalDetik = $waktuMulai->diffInSeconds($waktuSelesai);
 
-                                    // Dibagi 60 dan dibulatkan ke bawah untuk dapat Menit yang pas
-                                    $menit = floor($totalDetik / 60);
+                                    if ($totalDetik > $limitDetik) {
+                                        $totalDetik = $limitDetik;
+                                    }
 
-                                    // Sisa detiknya
+                                    $menit = floor($totalDetik / 60);
                                     $detik = $totalDetik % 60;
                                 @endphp
 

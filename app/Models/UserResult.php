@@ -19,7 +19,9 @@ class UserResult extends Model
     protected function casts(): array
     {
         return [
+            'created_at' => 'datetime',
             'finished_at' => 'datetime',
+            'ends_at' => 'datetime', // <--- TAMBAHKAN INI WAJIB!
         ];
     }
 

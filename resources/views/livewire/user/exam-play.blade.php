@@ -4,6 +4,7 @@ use Livewire\Volt\Component;
 use App\Models\UserResult;
 use App\Models\UserAnswer;
 use App\Models\Question;
+use Illuminate\Support\Facades\Redis;
 
 new class extends Component {
     public $result_id;
@@ -18,8 +19,18 @@ new class extends Component {
         $this->result_id = $result_id;
         $result = UserResult::with('examPackage')->findOrFail($result_id);
 
+        // 1. Cek apakah ujian sudah disubmit normal sebelumnya
         if ($result->finished_at) {
             return redirect()->route('user.dashboard');
+        }
+
+        // ========================================================
+        // 2. FITUR BARU: CEK WAKTU KIAMAT SERVER
+        // Kita cek ends_at tidak null dulu sebelum membandingkan waktu
+        // ========================================================
+        if ($result->ends_at && now()->greaterThanOrEqualTo($result->ends_at)) {
+            $this->finishExam(); // Tarik Redis ke DB & hitung nilai
+            return;
         }
 
         $this->exam_package_id = $result->exam_package_id;
@@ -27,8 +38,17 @@ new class extends Component {
 
         $this->currentQuestionIndex = session('last_q_' . $this->result_id, 0);
 
-        $durationMinutes = $result->examPackage->time_limit;
-        $this->endTime = $result->created_at->addMinutes($durationMinutes)->toIso8601String();
+        // ========================================================
+        // 3. SETEL TIMER JAVASCRIPT
+        // Jika ends_at ada (data baru), pakai itu. Jika tidak ada (data lama), pakai created_at.
+        // ========================================================
+        if ($result->ends_at) {
+            $this->endTime = \Carbon\Carbon::parse($result->ends_at)->toIso8601String();
+        } else {
+            // Backup untuk data ujian lama sebelum fitur ends_at aktif
+            $durationMinutes = $result->examPackage->time_limit;
+            $this->endTime = $result->created_at->addMinutes($durationMinutes)->toIso8601String();
+        }
 
         $existingAnswers = UserAnswer::where('result_id', $result_id)->get();
         foreach ($existingAnswers as $ans) {
@@ -49,12 +69,43 @@ new class extends Component {
 
     public function finishExam()
     {
+        // Hapus jejak navigasi session
         session()->forget('last_q_' . $this->result_id);
 
+        // Ambil data result saat ini
         $result = UserResult::findOrFail($this->result_id);
+
+        // =========================================================
+        // 1. LOGIKA PENGUNCI DURASI (AGAR TIDAK BENGKAK)
+        // =========================================================
+        $waktuSelesaiSimpan = now();
+
+        // Jika siswa telat (sekarang sudah lewat ends_at),
+        // maka set waktu selesainya pas di batas maksimal saja.
+        if ($result->ends_at && $waktuSelesaiSimpan->greaterThan($result->ends_at)) {
+            $waktuSelesaiSimpan = $result->ends_at;
+        }
+
+        // =========================================================
+        // 2. SINKRONISASI PAKSA REDIS (SAPU BERSIH)
+        // =========================================================
+        $redisKey = 'exam_answers:' . $this->result_id;
+        $answersFromRedis = Redis::hgetall($redisKey);
+
+        if (!empty($answersFromRedis)) {
+            foreach ($answersFromRedis as $questionId => $answer) {
+                UserAnswer::updateOrCreate(['result_id' => $this->result_id, 'question_id' => $questionId], ['selected_option' => $answer]);
+            }
+            Redis::del($redisKey);
+        }
+
+        // =========================================================
+        // 3. PERHITUNGAN NILAI
+        // =========================================================
         $totalQuestions = count($this->questions);
         $correctAnswersCount = 0;
 
+        // Ambil jawaban dari DB yang sudah lengkap disinkronkan tadi
         $userAnswers = UserAnswer::where('result_id', $this->result_id)->get();
 
         foreach ($this->questions as $question) {
@@ -71,9 +122,12 @@ new class extends Component {
 
         $finalScore = $totalQuestions > 0 ? ($correctAnswersCount / $totalQuestions) * 100 : 0;
 
+        // =========================================================
+        // 4. UPDATE STATUS SELESAI
+        // =========================================================
         $result->update([
             'score' => $finalScore,
-            'finished_at' => now(),
+            'finished_at' => $waktuSelesaiSimpan, // Pakai waktu yang sudah "dikunci"
         ]);
 
         return redirect()
@@ -194,7 +248,7 @@ new class extends Component {
                                     <div class="pt-1">
                                         <input type="radio" name="answer_{{ $currentQ->id }}"
                                             value="{{ strtoupper($opt) }}"
-                                            wire:click="answerQuestion({{ $currentQ->id }}, '{{ strtoupper($opt) }}')"
+                                            onclick="simpanJawabanKeServer({{ $currentQ->id }}, '{{ strtoupper($opt) }}')"
                                             class="w-5 h-5 text-blue-600 flex-shrink-0 cursor-pointer"
                                             {{ isset($answers[$currentQ->id]) && $answers[$currentQ->id] == strtoupper($opt) ? 'checked' : '' }}>
                                     </div>
@@ -353,6 +407,36 @@ new class extends Component {
                         });
                     }
                 }, 100);
+            }
+            // Variabel untuk menyimpan ID Kertas Ujian saat ini
+            const RESULT_ID = {{ $result_id }};
+
+            function simpanJawabanKeServer(questionId, jawaban) {
+                // Tembak data ke API tanpa memuat ulang halaman
+                fetch('{{ route('api.exam.save') }}', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-CSRF-TOKEN': '{{ csrf_token() }}' // Penting untuk keamanan Laravel
+                        },
+                        body: JSON.stringify({
+                            result_id: RESULT_ID,
+                            question_id: questionId,
+                            answer: jawaban
+                        })
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.status === 'success') {
+                            console.log('Jawaban ' + jawaban + ' tersimpan di Redis!');
+                            // Di sini kamu bisa tambahkan kodingan JS untuk mengubah warna tombol
+                            // agar siswa tahu jawabannya sudah dipilih.
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Error:', error);
+                        alert('Gagal menyimpan jawaban, pastikan internet Anda stabil.');
+                    });
             }
         </script>
     </div>

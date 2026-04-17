@@ -55,12 +55,16 @@ class ExamController extends Controller
         }
 
         // 6. BUAT KERTAS UJIAN BARU
+        // Ambil durasi menit dari paket soal (pastikan kolom 'time_limit' ada di database-mu)
+        $durasiMenit = $package->time_limit;
+
         $result = UserResult::create([
             'user_id'         => $user->id,
             'exam_package_id' => $package_id,
-            'attempt_number'  => 1, // Pasti selalu 1, karena tidak ada percobaan kedua
+            'attempt_number'  => 1,
             'score'           => 0,
-            'finished_at'     => null,
+            'ends_at'         => now()->addMinutes($durasiMenit), // TAMBAHKAN INI: Batas waktu server
+            'finished_at'     => null, // TETAP NULL: Karena ujian baru dimulai
         ]);
 
         // 7. Arahkan ke Halaman Livewire Ujian
