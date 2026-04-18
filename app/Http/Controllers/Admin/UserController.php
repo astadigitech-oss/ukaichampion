@@ -91,14 +91,18 @@ class UserController extends Controller
             unset($validated['password']);
         }
 
+        // ==========================================
         // LOGIKA KASTA BARU
+        // ==========================================
         if ($validated['premium_tier'] === 'gratis') {
             $validated['is_premium'] = false;
             $validated['premium_until'] = null;
         } else {
             $validated['is_premium'] = true;
+
+            // Jika Admin mengosongkan input tanggal, otomatis diset 1 Tahun
             if (empty($validated['premium_until'])) {
-                $validated['premium_until'] = now()->addDays(30);
+                $validated['premium_until'] = now()->addYear(); // <--- INI YANG DIUBAH
             }
         }
 
