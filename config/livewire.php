@@ -151,7 +151,7 @@ return [
     | after a redirect has been triggered using something like `redirect(...)`
     | Setting this to true will render the view once more before redirecting
     |
-    */
+    */a
 
     'render_on_redirect' => false,
 
