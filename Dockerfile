@@ -15,6 +15,7 @@ FROM php:8.3-cli-alpine
 
 # install dependencies
 RUN apk add --no-cache \
+    bash \
     libpng-dev \
     libjpeg-turbo-dev \
     freetype-dev \
