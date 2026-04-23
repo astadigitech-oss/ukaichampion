@@ -16,16 +16,21 @@ FROM php:8.3-cli-alpine
 # install dependencies
 RUN apk add --no-cache \
     bash \
+    git \
+    curl \
+    zip \
+    unzip \
+    autoconf \
+    g++ \
+    make \
+    linux-headers \
     libpng-dev \
     libjpeg-turbo-dev \
     freetype-dev \
-    zip \
-    unzip \
-    git \
-    curl \
     oniguruma-dev \
     libxml2-dev \
     libzip-dev
+
 
 RUN docker-php-ext-install \
     pdo \
@@ -37,8 +42,8 @@ RUN docker-php-ext-install \
     gd \
     zip
 
-# install PHP extensions
-RUN docker-php-ext-install pdo pdo_mysql mbstring exif pcntl bcmath gd
+RUN pecl install redis \
+    && docker-php-ext-enable redis
 
 # install Composer
 COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
