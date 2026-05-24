@@ -5,17 +5,12 @@ use App\Models\UserResult;
 use App\Models\UserAnswer;
 use App\Models\Question;
 use Illuminate\Support\Facades\Redis;
-// Pastikan namespace dan use di atas sesuai dengan file aslimu ya!
 
-class ExamPlayer extends Component
-{
+// KITA KEMBALIKAN KE "new class" AGAR VOLT TIDAK ERROR
+new class extends Component {
     public $result_id;
     public $exam_package_id;
-
-    // 1. KITA HAPUS public $questions;
-    // 2. KITA GANTI dengan ini untuk tahu jumlah soal saja (sangat ringan):
     public $totalQuestions = 0;
-
     public $currentQuestionIndex = 0;
     public $answers = [];
     public $endTime;
@@ -36,7 +31,6 @@ class ExamPlayer extends Component
 
         $this->exam_package_id = $result->exam_package_id;
 
-        // 3. KITA UBAH CARA HITUNG TOTAL SOAL
         $questions = $this->getAllQuestionsFromCache();
         $this->totalQuestions = count($questions);
 
@@ -52,7 +46,6 @@ class ExamPlayer extends Component
         $this->answers = UserAnswer::where('result_id', $result_id)->pluck('selected_option', 'question_id')->mapWithKeys(fn($item, $key) => [(string) $key => $item])->toArray();
     }
 
-    // 4. TAMBAHKAN FUNGSI INI SEBAGAI "PENGAMBIL SOAL DARI GUDANG"
     protected function getAllQuestionsFromCache()
     {
         return \Illuminate\Support\Facades\Cache::remember('questions_package_' . $this->exam_package_id, 7200, function () {
@@ -91,14 +84,12 @@ class ExamPlayer extends Component
             Redis::del($redisKey);
         }
 
-        // 5. UBAH CARA PENILAIAN, AMBIL DARI FUNGSI CACHE
         $questions = $this->getAllQuestionsFromCache();
         $totalQuestions = count($questions);
         $correctAnswersCount = 0;
         $userAnswers = UserAnswer::where('result_id', $this->result_id)->get();
 
         foreach ($questions as $question) {
-            // Ganti dari $this->questions
             $userAns = $userAnswers->where('question_id', $question['id'])->first();
             if ($userAns) {
                 $isCorrect = trim(strtoupper($userAns->selected_option)) === trim(strtoupper($question['correct_answer']));
@@ -119,7 +110,6 @@ class ExamPlayer extends Component
 
     public function nextQuestion()
     {
-        // 6. GANTI LOGIKA COUNT
         if ($this->currentQuestionIndex < $this->totalQuestions - 1) {
             $this->currentQuestionIndex++;
             $this->updateSessionIndex();
@@ -140,17 +130,15 @@ class ExamPlayer extends Component
         $this->updateSessionIndex();
     }
 
-    // 7. TAMBAHKAN FUNGSI RENDER INI AGAR BLADE TETAP BISA MEMBACA SOAL
-    public function render()
+    // KHUSUS VOLT: Kita ganti fungsi render() menjadi with() untuk melempar data soal ke HTML
+    public function with(): array
     {
-        $allQuestions = $this->getAllQuestionsFromCache();
-
-        return view('livewire.exam-player', [
-            // Sesuaikan nama view-nya jika berbeda
-            'questions' => $allQuestions,
-        ]);
+        return [
+            'questions' => $this->getAllQuestionsFromCache(),
+        ];
     }
-} ?>
+};
+?>
 
 <div>
     <style>
