@@ -10,6 +10,12 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Cache;
 
+use Intervention\Image\ImageManager;
+use Intervention\Image\Drivers\Gd\Driver;
+use Intervention\Image\Format;
+use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
+
 class QuestionController extends Controller
 {
     public function index()
@@ -68,12 +74,23 @@ class QuestionController extends Controller
                     ->orderBy('order_num', 'desc')
                     ->increment('order_num');
 
-                // 2. Logika Upload Gambar Opsi (Tetap sama)
+                // 2. Logika Kompresi Gambar (Create - V4)
                 if ($isImage) {
+                    // Panggil mesin Intervention Image V4
+                    $manager = ImageManager::usingDriver(Driver::class);
+
                     foreach (['a', 'b', 'c', 'd', 'e'] as $opt) {
                         if ($request->hasFile("image_$opt")) {
-                            $path = $request->file("image_$opt")->store('options', 'public');
-                            $data["option_$opt"] = '/storage/' . $path;
+                            $file = $request->file("image_$opt");
+                            $filename = Str::random(20) . '.jpg';
+
+                            // Proses Kompresi V4 (Decode -> Encode)
+                            $image = $manager->decode($file);
+                            $encodedImage = $image->encodeUsingFormat(Format::JPEG, quality: 70);
+
+                            Storage::disk('public')->put('options/' . $filename, (string) $encodedImage);
+
+                            $data["option_$opt"] = '/storage/options/' . $filename;
                         }
                     }
                 }
@@ -134,14 +151,24 @@ class QuestionController extends Controller
                 $data = $request->all();
                 $data['is_answer_image'] = $isImage;
 
+                // Logika Kompresi Gambar (Update - V4)
                 if ($isImage) {
+                    $manager = ImageManager::usingDriver(Driver::class);
+
                     foreach (['a', 'b', 'c', 'd', 'e'] as $opt) {
                         if ($request->hasFile("image_$opt")) {
-                            // SIMPAN HANYA PATH (tanpa /storage/)
-                            $path = $request->file("image_$opt")->store('options', 'public');
-                            $data["option_$opt"] = $path;
+                            $file = $request->file("image_$opt");
+                            $filename = Str::random(20) . '.jpg';
+
+                            // Proses Kompresi V4
+                            $image = $manager->decode($file);
+                            $encodedImage = $image->encodeUsingFormat(Format::JPEG, quality: 70);
+
+                            Storage::disk('public')->put('options/' . $filename, (string) $encodedImage);
+
+                            // SIMPAN HANYA PATH sesuai format lama kamu
+                            $data["option_$opt"] = 'options/' . $filename;
                         } else {
-                            // Pertahankan data lama
                             $data["option_$opt"] = $question->{"option_$opt"};
                         }
                     }

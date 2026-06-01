@@ -96,6 +96,7 @@ new class extends Component {
                         {{-- TAMBAHAN: Header Durasi --}}
                         <th class="px-6 py-4 text-center text-xs font-bold text-gray-500 uppercase">Durasi</th>
                         <th class="px-6 py-4 text-right text-xs font-bold text-gray-500 uppercase">Tanggal</th>
+                        <th class="px-6 py-4 text-center text-xs font-bold text-gray-500 uppercase">Aksi</th>
                     </tr>
                 </thead>
                 <tbody class="divide-y divide-gray-200">
@@ -160,11 +161,23 @@ new class extends Component {
                             <td class="px-6 py-4 text-right text-xs text-gray-500">
                                 {{ $res->finished_at->format('d M Y, H:i') }}
                             </td>
+
+                            {{-- TAMBAHAN BARU: Tombol Reset --}}
+                            <td class="px-6 py-4 text-center">
+                                <form action="{{ route('admin.users.reset-exam', $res->id) }}" method="POST"
+                                    onsubmit="return confirm('Yakin mereset ujian {{ $res->user->name }}? Nilai dan jawabannya akan dihapus total!')">
+                                    @csrf
+                                    <button type="submit"
+                                        class="px-3 py-1.5 bg-red-100 text-red-700 hover:bg-red-600 hover:text-white rounded text-[10px] font-black uppercase tracking-wider transition-colors">
+                                        🔄 Reset
+                                    </button>
+                                </form>
+                            </td>
                         </tr>
                     @empty
                         <tr>
-                            {{-- TAMBAHAN: Colspan diubah dari 5 menjadi 6 karena ketambahan 1 kolom baru --}}
-                            <td colspan="6" class="px-6 py-12 text-center text-gray-400 italic">Belum ada data
+                            {{-- TAMBAHAN: Colspan diubah dari 5 menjadi 7 karena ketambahan 2 kolom baru --}}
+                            <td colspan="7" class="px-6 py-12 text-center text-gray-400 italic">Belum ada data
                                 pengerjaan ujian.</td>
                         </tr>
                     @endforelse

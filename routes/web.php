@@ -85,6 +85,7 @@ Route::middleware('auth:admin')->group(function () {
     Route::get('/admin/profile', [AdminDashboardController::class, 'profile'])->name('admin.profile');
     Route::get('/admin/transactions', [\App\Http\Controllers\Admin\AdminDashboardController::class, 'transactions'])->name('admin.transactions');
     Route::get('/admin/leaderboard', [\App\Http\Controllers\Admin\AdminDashboardController::class, 'leaderboard'])->name('admin.leaderboard');
+    Route::post('/users/reset-exam/{result_id}', [\App\Http\Controllers\Admin\UserController::class, 'resetUjianMurid'])->name('admin.users.reset-exam');
 });
 
 // ==========================================

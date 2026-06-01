@@ -118,4 +118,37 @@ class UserController extends Controller
 
         return redirect()->route('admin.users.index')->with('success', 'User berhasil dihapus.');
     }
+
+    // ==========================================
+    // FUNGSI DARURAT: RESET UJIAN MURID (VERSI FIX 1000%)
+    // ==========================================
+    public function resetUjianMurid($result_id)
+    {
+        // 1. Cari data hasil ujian murid berdasarkan ID-nya
+        $result = \App\Models\UserResult::findOrFail($result_id);
+
+        // 2. Hapus semua jawaban yang sudah terlanjur dia pilih
+        \App\Models\UserAnswer::where('result_id', $result_id)->delete();
+
+        // 3. Hapus memori nomor soal terakhir di session server
+        session()->forget('last_q_' . $result_id);
+
+        // Hapus juga sisa-sisa jawaban yang mungkin masih nyangkut di Redis
+        \Illuminate\Support\Facades\Redis::del('exam_answers:' . $result_id);
+
+        // 4. KUNCI SUKSES: Ubah data satu per satu agar tidak diblokir Laravel
+        $result->score = null;
+        $result->finished_at = null;
+        $result->created_at = now(); // Ini pasti akan mengubah waktunya ke detik ini
+
+        // Cek secara aman apakah kolom ends_at benar-benar ada di tabel database
+        if (\Illuminate\Support\Facades\Schema::hasColumn('user_results', 'ends_at')) {
+            $result->ends_at = null;
+        }
+
+        // 5. Simpan paksa ke database
+        $result->save();
+
+        return redirect()->back()->with('success', 'Ujian berhasil direset total! Waktu pengerjaan diulang dari awal.');
+    }
 }
