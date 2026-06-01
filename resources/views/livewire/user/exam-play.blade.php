@@ -115,7 +115,6 @@ new class extends Component {
             $this->updateSessionIndex();
         }
     }
-
     public function prevQuestion()
     {
         if ($this->currentQuestionIndex > 0) {
@@ -123,7 +122,6 @@ new class extends Component {
             $this->updateSessionIndex();
         }
     }
-
     public function jumpToQuestion($index)
     {
         $this->currentQuestionIndex = $index;
@@ -275,7 +273,6 @@ new class extends Component {
                                     {{ $index + 1 }}
                                 </button>
                             @endforeach
-
                         </div>
                     </div>
                 </div>

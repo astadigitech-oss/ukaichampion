@@ -369,6 +369,6 @@ new class extends Component {
                 });
                 applyHighlight(element);
             }
-        }, 300);
+        }, 300); // Jeda sedikit agar Livewire selesai me-render DOM baru
     });
 </script>
