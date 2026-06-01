@@ -65,6 +65,14 @@
             visibility: visible;
             display: flex;
         }
+
+        /* Buat tabel dari CKEditor/TinyMCE otomatis responsif */
+        .prose table {
+            display: block;
+            max-width: 100%;
+            overflow-x: auto;
+            white-space: nowrap;
+        }
     </style>
 
     <div class="watermark-overlay"></div>
@@ -197,7 +205,7 @@
                                 </div>
 
                                 <div class="p-4 border-b border-gray-100">
-                                    <div class="prose max-w-none text-sm text-gray-800 mb-6 protect-text leading-relaxed"
+                                    <div class="prose max-w-none text-sm text-gray-800 mb-6 protect-text leading-relaxed overflow-x-auto"
                                         onclick="if(event.target.tagName==='IMG') openLightbox(event.target.src)">
                                         {{-- FIX: Tambahkan ini --}}
                                         {!! $q?->question_text ?? 'Soal dihapus.' !!}
@@ -281,7 +289,7 @@
                                                 <span>🛡️</span> © UKAICHAMPION.
                                             </div>
                                         </div>
-                                        <div class="prose max-w-none text-sm text-gray-800 protect-text leading-relaxed"
+                                        <div class="prose max-w-none text-sm text-gray-800 protect-text leading-relaxed overflow-x-auto"
                                             onclick="if(event.target.tagName==='IMG') openLightbox(event.target.src)">
                                             {{-- FIX: Tambahkan ini --}}
                                             {!! $q->explanation !!}
