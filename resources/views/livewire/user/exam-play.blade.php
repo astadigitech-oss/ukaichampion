@@ -46,11 +46,44 @@ new class extends Component {
         $this->answers = UserAnswer::where('result_id', $result_id)->pluck('selected_option', 'question_id')->mapWithKeys(fn($item, $key) => [(string) $key => $item])->toArray();
     }
 
+    // 1. BIARKAN FUNGSI INI TETAP ADA (Jangan Dihapus)
+    // Fungsinya cuma dipakai sekali di akhir saat klik "Selesai Ujian" untuk hitung skor.
     protected function getAllQuestionsFromCache()
     {
         return \Illuminate\Support\Facades\Cache::remember('questions_package_' . $this->exam_package_id, 7200, function () {
             return Question::where('exam_package_id', $this->exam_package_id)->orderBy('order_num', 'asc')->get()->toArray();
         });
+    }
+
+    // 2. TAMBAHKAN 2 FUNGSI BARU INI DI BAWAHNYA (Untuk mempercepat Next/Prev)
+    protected function getSidebarQuestions()
+    {
+        return \Illuminate\Support\Facades\Cache::remember('questions_sidebar_' . $this->exam_package_id, 7200, function () {
+            return Question::where('exam_package_id', $this->exam_package_id)->select('id', 'order_num')->orderBy('order_num', 'asc')->get()->toArray();
+        });
+    }
+
+    protected function getActiveQuestion()
+    {
+        $sidebarQuestions = $this->getSidebarQuestions();
+        if (isset($sidebarQuestions[$this->currentQuestionIndex])) {
+            $qId = $sidebarQuestions[$this->currentQuestionIndex]['id'];
+
+            return \Illuminate\Support\Facades\Cache::remember('q_detail_' . $qId, 7200, function () use ($qId) {
+                return Question::find($qId)->toArray();
+            });
+        }
+        return null;
+    }
+
+    // 3. UBAH FUNGSI with() MENJADI SEPERTI INI
+    // Ini rahasia yang bikin pindah soal jadi instan karena data raksasa ditiadakan saat navigasi.
+    public function with(): array
+    {
+        return [
+            'sidebarQuestions' => $this->getSidebarQuestions(),
+            'currentQ' => $this->getActiveQuestion(),
+        ];
     }
 
     public function updateSessionIndex()
@@ -127,14 +160,6 @@ new class extends Component {
         $this->currentQuestionIndex = $index;
         $this->updateSessionIndex();
     }
-
-    // KHUSUS VOLT: Kita ganti fungsi render() menjadi with() untuk melempar data soal ke HTML
-    public function with(): array
-    {
-        return [
-            'questions' => $this->getAllQuestionsFromCache(),
-        ];
-    }
 };
 ?>
 
@@ -169,8 +194,7 @@ new class extends Component {
     </div>
 
     <div x-data="{ timer: timerData(), localAnswers: @js($answers) }" x-init="timer.startTimer()">
-        @if (count($questions) > 0)
-            @php $currentQ = $questions[$currentQuestionIndex]; @endphp
+        @if ($currentQ)
 
             <div class="flex flex-col md:flex-row gap-6 relative">
                 <div id="top-of-question" class="w-full md:w-3/4 bg-white rounded-xl shadow-sm border overflow-hidden">
@@ -204,7 +228,7 @@ new class extends Component {
 
                                     <input type="radio" name="answer" value="{{ strtoupper($opt) }}"
                                         class="mt-1 w-5 h-5 text-blue-600"
-                                        @click="localAnswers['{{ $currentQ['id'] }}'] = '{{ strtoupper($opt) }}'; $wire.answerQuestion({{ $currentQ['id'] }}, '{{ strtoupper($opt) }}'); simpanJawabanKeServer({{ $currentQ['id'] }}, '{{ strtoupper($opt) }}')"
+                                        @click="localAnswers['{{ $currentQ['id'] }}'] = '{{ strtoupper($opt) }}'; simpanJawabanKeServer({{ $currentQ['id'] }}, '{{ strtoupper($opt) }}')"
                                         :checked="localAnswers['{{ $currentQ['id'] }}'] === '{{ strtoupper($opt) }}'">
 
                                     <div class="w-full">
@@ -233,7 +257,7 @@ new class extends Component {
                         </button>
 
                         <div class="flex items-center gap-2">
-                            @if ($currentQuestionIndex < count($questions) - 1)
+                            @if ($currentQuestionIndex < count($sidebarQuestions) - 1)
                                 {{-- Tombol Selanjutnya: Gunakan wire:key agar tidak bentrok dengan tombol Selesai --}}
                                 <button wire:click="nextQuestion" wire:key="btn-next-{{ $currentQuestionIndex }}"
                                     class="px-6 py-2 bg-blue-600 text-white font-bold rounded-lg shadow-md hover:bg-blue-700 transition-colors">
@@ -258,7 +282,7 @@ new class extends Component {
                         {{-- FIX: Tambahkan batas tinggi (max-h) dan overflow-y-auto agar bisa discroll --}}
                         <div class="flex flex-wrap gap-2 max-h-[60vh] overflow-y-auto pr-2 pb-2">
 
-                            @foreach ($questions as $index => $q)
+                            @foreach ($sidebarQuestions as $index => $q)
                                 <button wire:click="jumpToQuestion({{ $index }})"
                                     class="w-9 h-9 flex items-center justify-center font-bold text-xs border rounded-lg transition-all"
                                     :class="{
