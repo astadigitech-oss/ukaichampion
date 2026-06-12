@@ -184,7 +184,8 @@ new class extends Component {
     </style>
 
     {{-- FIX: Modal ditaruh paling luar agar tidak terpotong sidebar --}}
-    <div id="examLightboxModal"
+    {{-- Tambahkan wire:ignore di sini agar Livewire tidak menduplikat modalnya --}}
+    <div id="examLightboxModal" wire:ignore
         class="hidden fixed inset-0 w-full h-full bg-black/80 z-[99999] flex flex-col items-center justify-center p-4"
         style="position: fixed !important; top:0; left:0;" onclick="closeLightbox()">
         <button class="absolute top-4 right-4 text-white text-5xl font-black">&times;</button>
@@ -370,6 +371,14 @@ new class extends Component {
                     @this.call('finishExam');
                 }
             }
+
+            // PINDAHKAN MODAL ZOOM KE BODY AGAR MENGALAHKAN SIDEBAR
+            document.addEventListener('DOMContentLoaded', function() {
+                const modalUjian = document.getElementById('examLightboxModal');
+                if (modalUjian) {
+                    document.body.appendChild(modalUjian);
+                }
+            });
         </script>
     </div>
 </div>
